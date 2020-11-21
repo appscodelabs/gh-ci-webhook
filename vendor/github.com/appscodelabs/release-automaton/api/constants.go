@@ -17,10 +17,15 @@ limitations under the License.
 package api
 
 const (
-	Workspace      = "/tmp/workspace"
-	GitHubUserKey  = "GITHUB_USER"
-	GitHubTokenKey = "GITHUB_TOKEN"
-	BranchMaster   = "master"
-	LabelLocked    = "locked"
-	LabelAutoMerge = "automerge"
+	Workspace              = "/tmp/workspace"
+	GitHubUserKey          = "GITHUB_USER"
+	GitHubTokenKey         = "GITHUB_TOKEN"
+	BranchMaster           = "master"
+	LabelLocked            = "locked"
+	LabelAutoMerge         = "automerge"
+	ReleasesDir            = "releases"
+	StableChartRegistry    = "appscode"
+	StableChartRegistryURL = "https://charts.appscode.com/stable/"
+	TestChartRegistry      = "appscode-testing"
+	TestChartRegistryURL   = "https://charts.appscode.com/testing/"
 )

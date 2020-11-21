@@ -7,30 +7,26 @@ github.com/Masterminds/sprig
 # github.com/alessio/shellescape v1.2.2
 ## explicit
 github.com/alessio/shellescape
-# github.com/appscode/go v0.0.0-20200323182826-54e98e09185a
-## explicit
-github.com/appscode/go/log/golog
-github.com/appscode/go/version
-# github.com/appscodelabs/release-automaton v0.0.14
+# github.com/appscodelabs/release-automaton v0.0.34
 ## explicit
 github.com/appscodelabs/release-automaton/api
 github.com/appscodelabs/release-automaton/lib
 github.com/appscodelabs/release-automaton/templates
 # github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
 github.com/codegangsta/inject
-# github.com/codeskyblue/go-sh v0.0.0-20190412065543-76bd3d59ff27 => github.com/gomodules/go-sh v0.0.0-20200626022009-2c4bcc0f861d
+# github.com/codeskyblue/go-sh v0.0.0-20200712050446-30169cf553fe => github.com/gomodules/go-sh v0.0.0-20200626022009-2c4bcc0f861d
 ## explicit
 github.com/codeskyblue/go-sh
 # github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 github.com/golang/glog
-# github.com/golang/protobuf v1.3.2
+# github.com/golang/protobuf v1.4.3
 github.com/golang/protobuf/proto
-# github.com/google/go-github/v32 v32.0.0
+# github.com/google/go-github/v32 v32.1.0
 ## explicit
 github.com/google/go-github/v32/github
 # github.com/google/go-querystring v1.0.0
 github.com/google/go-querystring/query
-# github.com/google/uuid v1.1.1
+# github.com/google/uuid v1.1.2
 github.com/google/uuid
 # github.com/gorilla/mux v1.7.3
 ## explicit
@@ -41,6 +37,8 @@ github.com/huandu/xstrings
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
+# github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+github.com/kballard/go-shellquote
 # github.com/keighl/metabolize v0.0.0-20150915210303-97ab655d4034
 github.com/keighl/metabolize
 # github.com/kr/pretty v0.2.0
@@ -49,7 +47,7 @@ github.com/keighl/metabolize
 github.com/mitchellh/copystructure
 # github.com/mitchellh/reflectwalk v1.0.0
 github.com/mitchellh/reflectwalk
-# github.com/spf13/cobra v1.0.0
+# github.com/spf13/cobra v1.1.1
 ## explicit
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
@@ -83,6 +81,10 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # gomodules.xyz/version v0.1.0
 gomodules.xyz/version
+# gomodules.xyz/x v0.0.0-20201105065653-91c568df6331
+## explicit
+gomodules.xyz/x/log/golog
+gomodules.xyz/x/version
 # google.golang.org/appengine v1.6.5
 google.golang.org/appengine/internal
 google.golang.org/appengine/internal/base
@@ -91,6 +93,34 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
+# google.golang.org/protobuf v1.23.0
+google.golang.org/protobuf/encoding/prototext
+google.golang.org/protobuf/encoding/protowire
+google.golang.org/protobuf/internal/descfmt
+google.golang.org/protobuf/internal/descopts
+google.golang.org/protobuf/internal/detrand
+google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/messageset
+google.golang.org/protobuf/internal/encoding/tag
+google.golang.org/protobuf/internal/encoding/text
+google.golang.org/protobuf/internal/errors
+google.golang.org/protobuf/internal/fieldnum
+google.golang.org/protobuf/internal/fieldsort
+google.golang.org/protobuf/internal/filedesc
+google.golang.org/protobuf/internal/filetype
+google.golang.org/protobuf/internal/flags
+google.golang.org/protobuf/internal/genname
+google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/pragma
+google.golang.org/protobuf/internal/set
+google.golang.org/protobuf/internal/strs
+google.golang.org/protobuf/internal/version
+google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protoreflect
+google.golang.org/protobuf/reflect/protoregistry
+google.golang.org/protobuf/runtime/protoiface
+google.golang.org/protobuf/runtime/protoimpl
 # k8s.io/apimachinery v0.18.3 => github.com/kmodules/apimachinery v0.19.0-alpha.0.0.20200520235721-10b58e57a423
 ## explicit
 k8s.io/apimachinery/pkg/util/sets

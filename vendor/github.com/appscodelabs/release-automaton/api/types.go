@@ -41,6 +41,7 @@ type Project struct {
 	Key           string            `json:"key,omitempty"`
 	Tag           *string           `json:"tag,omitempty"`
 	Tags          map[string]string `json:"tags,omitempty"` // tag-> branch
+	ChartNames    []string          `json:"chartNames,omitempty"`
 	Charts        []string          `json:"charts,omitempty"`
 	Commands      []string          `json:"commands,omitempty"`
 	ReleaseBranch string            `json:"release_branch,omitempty"`
@@ -73,6 +74,30 @@ type Release struct {
 	ExternalProjects map[string]ExternalProject `json:"external_projects,omitempty"`
 }
 
+func (r Release) Validate() error {
+	if r.Release == "" {
+		return fmt.Errorf("missing release number")
+	}
+	v, err := semver.NewVersion(r.Release)
+	if err != nil {
+		return err
+	}
+	for _, projects := range r.Projects {
+		for repoURL, project := range projects {
+			if project.Tag != nil {
+				projectVersion, err := semver.NewVersion(*project.Tag)
+				if err != nil {
+					return fmt.Errorf("invalid tag for repo %s: %s", repoURL, err)
+				}
+				if v.Prerelease() != projectVersion.Prerelease() {
+					return fmt.Errorf("repo %s uses different prerelease version %s compared to product release number %s", repoURL, *project.Tag, r.Release)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 /*
 - Only one pr per published_chart repo
 - Different chart repos can have different prs
@@ -92,6 +117,9 @@ const (
 
 	Chart          ReplyType = "/chart"
 	ChartPublished ReplyType = "/chart-published"
+
+	KrewManifest          ReplyType = "/krew-manifest"
+	KrewManifestPublished ReplyType = "/krew-manifest-published"
 )
 
 type Replies map[ReplyType][]Reply
@@ -143,14 +171,16 @@ func AppendReplyIfMissing(replies Replies, r Reply) (Replies, bool) {
 }
 
 type Reply struct {
-	Type           ReplyType
-	Tagged         *TaggedReplyData
-	PR             *PullRequestReplyData
-	ReadyToTag     *ReadyToTagReplyData
-	CherryPicked   *CherryPickedReplyData
-	Go             *GoReplyData
-	Chart          *ChartReplyData
-	ChartPublished *ChartPublishedReplyData
+	Type                  ReplyType
+	Tagged                *TaggedReplyData
+	PR                    *PullRequestReplyData
+	ReadyToTag            *ReadyToTagReplyData
+	CherryPicked          *CherryPickedReplyData
+	Go                    *GoReplyData
+	Chart                 *ChartReplyData
+	ChartPublished        *ChartPublishedReplyData
+	KrewManifest          *KrewManifestReplyData
+	KrewManifestPublished *KrewManifestPublishedReplyData
 }
 
 type ReplyKey struct {
@@ -178,6 +208,10 @@ func (r Reply) Key() ReplyKey {
 		return ReplyKey{Repo: r.Chart.Repo, B: r.Chart.Tag}
 	case ChartPublished:
 		return ReplyKey{Repo: r.ChartPublished.Repo}
+	case KrewManifest:
+		return ReplyKey{Repo: r.KrewManifest.Repo}
+	case KrewManifestPublished:
+		return ReplyKey{Repo: r.KrewManifestPublished.Repo}
 	default:
 		panic(fmt.Errorf("unknown reply type %s", r.Type))
 	}
@@ -224,6 +258,15 @@ type ChartReplyData struct {
 }
 
 type ChartPublishedReplyData struct {
+	Repo string
+}
+
+type KrewManifestReplyData struct {
+	Repo string
+	Tag  string
+}
+
+type KrewManifestPublishedReplyData struct {
 	Repo string
 }
 

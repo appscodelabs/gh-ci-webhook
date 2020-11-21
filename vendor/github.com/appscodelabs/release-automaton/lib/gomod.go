@@ -42,6 +42,15 @@ type MetaData struct {
 	GoImport string `meta:"go-import"`
 }
 
+func IsPublicGitRepo(repoURL string) bool {
+	if !strings.Contains(repoURL, "://") {
+		repoURL = "https://" + repoURL
+	}
+
+	_, err := http.Get(repoURL)
+	return err == nil
+}
+
 func DetectVCSRoot(repoURL string) (string, error) {
 	if !strings.Contains(repoURL, "://") {
 		repoURL = "https://" + repoURL
@@ -68,7 +77,8 @@ func DetectVCSRoot(repoURL string) (string, error) {
 
 	// GoImport: stash.appscode.dev/cli git https://github.com/stashed/cli
 	if data.GoImport == "" {
-		return "", fmt.Errorf("%s is missing go-import meta tag", uRepo.String())
+		fmt.Printf("%s is missing go-import meta tag", uRepo.String())
+		return "", nil
 	}
 	fmt.Printf("GoImport: %s\n", data.GoImport)
 
