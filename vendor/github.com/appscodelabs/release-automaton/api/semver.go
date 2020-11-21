@@ -98,3 +98,12 @@ func VersionToRune(v *semver.Version) rune {
 func AtLeastAsImp(base *semver.Version, x *semver.Version) bool {
 	return VersionToRune(x) >= VersionToRune(base)
 }
+
+func IsPrerelease(v string) bool {
+	return semver.MustParse(v).Prerelease() != ""
+}
+
+func IsPublicRelease(v string) bool {
+	prerelease := semver.MustParse(v).Prerelease()
+	return prerelease == "" || strings.Contains(prerelease, "rc.")
+}

@@ -4,14 +4,14 @@ go 1.14
 
 require (
 	github.com/alessio/shellescape v1.2.2
-	github.com/appscode/go v0.0.0-20200323182826-54e98e09185a
-	github.com/appscodelabs/release-automaton v0.0.14
-	github.com/codeskyblue/go-sh v0.0.0-20190412065543-76bd3d59ff27
-	github.com/google/go-github/v32 v32.0.0
+	github.com/appscodelabs/release-automaton v0.0.34
+	github.com/codeskyblue/go-sh v0.0.0-20200712050446-30169cf553fe
+	github.com/google/go-github/v32 v32.1.0
 	github.com/gorilla/mux v1.7.3
 	github.com/kr/pretty v0.2.0 // indirect
-	github.com/spf13/cobra v1.0.0
+	github.com/spf13/cobra v1.1.1
 	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
+	gomodules.xyz/x v0.0.0-20201105065653-91c568df6331
 	k8s.io/apimachinery v0.18.3
 )
 

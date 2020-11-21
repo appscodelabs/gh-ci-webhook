@@ -85,6 +85,8 @@ type PREvent struct {
 
 	HeadRef string
 	HeadSHA string // Also used as branch name in test repo so we can track in the check-runs events
+
+	Comment string
 }
 
 func (e PREvent) Branch() string {
@@ -276,7 +278,7 @@ func openPR(gh *github.Client, sh *shell.Session, event PREvent) error {
 	}
 
 	// open pr against project repo
-	_, err = lib.CreatePR(gh, owner, repo, &github.NewPullRequest{
+	pr, err := lib.CreatePR(gh, owner, repo, &github.NewPullRequest{
 		Title:               github.String(event.PRTitle),
 		Head:                github.String(event.Branch()),
 		Base:                github.String("master"),
@@ -284,7 +286,18 @@ func openPR(gh *github.Client, sh *shell.Session, event PREvent) error {
 		MaintainerCanModify: github.Bool(true),
 		Draft:               github.Bool(false),
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	if event.Comment != "" {
+		_, _, err = gh.Issues.CreateComment(context.TODO(), owner, repo, pr.GetNumber(), &github.IssueComment{
+			Body: github.String(event.Comment),
+		})
+		return err
+	}
+
+	return nil
 }
 
 func serveHTTP(w http.ResponseWriter, r *http.Request) {
@@ -315,9 +328,44 @@ func serveHTTP(w http.ResponseWriter, r *http.Request) {
 	case *github.PullRequestEvent:
 		handlePREvent(event, query)
 		return
+	case *github.IssueCommentEvent:
+		handlePRCommentEvent(event, query)
+		return
 	default:
 		http.Error(w, "unsupported event", http.StatusOK)
 		return
+	}
+}
+
+func handlePRCommentEvent(event *github.IssueCommentEvent, query url.Values) {
+	if event.Issue == nil ||
+		!event.Issue.IsPullRequest() ||
+		event.Comment == nil ||
+		!strings.HasPrefix(event.Comment.GetBody(), "/ok-to-test") {
+		return
+	}
+
+	prNumber := event.Issue.GetNumber()
+	details, _, err := gh.PullRequests.Get(
+		context.TODO(),
+		event.GetRepo().GetOwner().GetLogin(),
+		event.GetRepo().GetName(),
+		prNumber,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	prs <- PREvent{
+		PRRepoURL:   strings.TrimPrefix(event.GetRepo().GetHTMLURL(), "https://"),
+		TestRepoURL: strings.TrimPrefix(query.Get("ci-repo"), "https://"),
+		PRNumber:    prNumber,
+		PRTitle:     details.GetTitle(),
+		PRState:     details.GetState(),
+		PRMerged:    details.GetMerged(),
+		HeadRef:     details.GetHead().GetRef(),
+		HeadSHA:     details.GetHead().GetSHA(),
+		Comment:     event.Comment.GetBody(),
 	}
 }
 
