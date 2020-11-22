@@ -365,7 +365,7 @@ func handlePRCommentEvent(event *github.IssueCommentEvent, query url.Values) {
 		PRMerged:    details.GetMerged(),
 		HeadRef:     details.GetHead().GetRef(),
 		HeadSHA:     details.GetHead().GetSHA(),
-		Comment:     event.Comment.GetBody(),
+		Comment:     strings.TrimSpace(event.Comment.GetBody()),
 	}
 }
 
