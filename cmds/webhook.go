@@ -46,7 +46,7 @@ var (
 	secretKey   = ""
 	certDir     = "certs"
 	email       = "tamal@appscode.com"
-	hosts       = []string{"gh-ci-webhook.appscode.ninja"}
+	hosts       = []string{"gh-ci-webhook.appscode.com"}
 	port        = 8989
 	enableSSL   bool
 	queueLength = 100
