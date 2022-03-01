@@ -176,7 +176,7 @@ func runServer() error {
 			panic(err)
 		}
 	}()
-	return server.ListenAndServeTLS("", "") //Key and cert are coming from Let's Encrypt
+	return server.ListenAndServeTLS("", "") // Key and cert are coming from Let's Encrypt
 }
 
 func processPREvent(gh *github.Client, sh *shell.Session) {
@@ -197,7 +197,7 @@ func openPR(gh *github.Client, sh *shell.Session, event PREvent) error {
 
 	// TODO: cache git repo
 	wdCur := filepath.Join(api.Workspace, owner)
-	err := os.MkdirAll(wdCur, 0755)
+	err := os.MkdirAll(wdCur, 0o755)
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,7 @@ func openPR(gh *github.Client, sh *shell.Session, event PREvent) error {
 		}
 	}
 
-	err = ioutil.WriteFile(filepath.Join(wdCur, "event.env"), event.EnvFile(), 0644)
+	err = ioutil.WriteFile(filepath.Join(wdCur, "event.env"), event.EnvFile(), 0o644)
 	if err != nil {
 		return err
 	}
