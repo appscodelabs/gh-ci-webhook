@@ -22,7 +22,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
+	"gomodules.xyz/semvers"
 )
 
 type ProjectMeta interface {
@@ -42,11 +43,12 @@ type Project struct {
 	Tag           *string           `json:"tag,omitempty"`
 	Tags          map[string]string `json:"tags,omitempty"` // tag-> branch
 	ChartNames    []string          `json:"chartNames,omitempty"`
-	Charts        []string          `json:"charts,omitempty"`
+	ChartRepos    []string          `json:"charts,omitempty"`
 	Commands      []string          `json:"commands,omitempty"`
 	ReleaseBranch string            `json:"release_branch,omitempty"`
 	ReadyToTag    bool              `json:"ready_to_tag,omitempty"`
 	Changelog     ChangelogStatus   `json:"changelog,omitempty"`
+	SubProjects   []string          `json:"sub_projects,omitempty"`
 }
 
 func (p Project) GetCommands() []string {
@@ -125,7 +127,7 @@ const (
 type Replies map[ReplyType][]Reply
 
 func MergeReplies(replies Replies, elems ...Reply) Replies {
-	var out = replies
+	out := replies
 	for idx := range elems {
 		out = MergeReply(out, elems[idx])
 	}
@@ -301,7 +303,7 @@ func (chlog *Changelog) Sort() {
 		sort.Slice(projects.Releases, func(i, j int) bool {
 			vi, _ := semver.NewVersion(projects.Releases[i].Tag)
 			vj, _ := semver.NewVersion(projects.Releases[j].Tag)
-			return CompareVersions(vi, vj)
+			return semvers.CompareVersions(vi, vj)
 		})
 		chlog.Projects[idx] = projects
 	}

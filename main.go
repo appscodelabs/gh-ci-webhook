@@ -21,7 +21,7 @@ import (
 
 	"github.com/appscodelabs/gh-ci-webhook/cmds"
 
-	logs "gomodules.xyz/x/log/golog"
+	"gomodules.xyz/logs"
 )
 
 func main() {

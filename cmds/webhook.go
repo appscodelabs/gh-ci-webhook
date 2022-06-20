@@ -34,11 +34,11 @@ import (
 	"github.com/appscodelabs/release-automaton/lib"
 
 	"github.com/alessio/shellescape"
-	shell "github.com/codeskyblue/go-sh"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v45/github"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/acme/autocert"
+	shell "gomodules.xyz/go-sh"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 

@@ -23,7 +23,7 @@ import (
 
 	"github.com/appscodelabs/release-automaton/lib"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v45/github"
 )
 
 func main_CreateStatus() {

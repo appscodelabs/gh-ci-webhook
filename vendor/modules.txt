@@ -1,61 +1,82 @@
-# github.com/Masterminds/goutils v1.1.0
+# github.com/Masterminds/goutils v1.1.1
+## explicit
 github.com/Masterminds/goutils
-# github.com/Masterminds/semver v1.5.0
-github.com/Masterminds/semver
-# github.com/Masterminds/sprig v2.22.0+incompatible
-github.com/Masterminds/sprig
-# github.com/alessio/shellescape v1.2.2
-## explicit
+# github.com/Masterminds/semver/v3 v3.1.1
+## explicit; go 1.12
+github.com/Masterminds/semver/v3
+# github.com/Masterminds/sprig/v3 v3.2.2
+## explicit; go 1.13
+github.com/Masterminds/sprig/v3
+# github.com/alessio/shellescape v1.4.1
+## explicit; go 1.14
 github.com/alessio/shellescape
-# github.com/appscodelabs/release-automaton v0.0.34
-## explicit
+# github.com/appscodelabs/release-automaton v0.0.38-0.20220620234603-a7f3bd4ed885
+## explicit; go 1.18
 github.com/appscodelabs/release-automaton/api
 github.com/appscodelabs/release-automaton/lib
 github.com/appscodelabs/release-automaton/templates
 # github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
+## explicit
 github.com/codegangsta/inject
-# github.com/codeskyblue/go-sh v0.0.0-20200712050446-30169cf553fe => github.com/gomodules/go-sh v0.0.0-20200626022009-2c4bcc0f861d
-## explicit
-github.com/codeskyblue/go-sh
-# github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-github.com/golang/glog
-# github.com/golang/protobuf v1.4.3
+# github.com/go-logr/logr v1.2.3
+## explicit; go 1.16
+github.com/go-logr/logr
+# github.com/golang/protobuf v1.5.2
+## explicit; go 1.9
 github.com/golang/protobuf/proto
-# github.com/google/go-github/v32 v32.1.0
-## explicit
-github.com/google/go-github/v32/github
-# github.com/google/go-querystring v1.0.0
+# github.com/google/go-github/v45 v45.1.0
+## explicit; go 1.17
+github.com/google/go-github/v45/github
+# github.com/google/go-querystring v1.1.0
+## explicit; go 1.10
 github.com/google/go-querystring/query
-# github.com/google/uuid v1.1.2
-github.com/google/uuid
-# github.com/gorilla/mux v1.7.3
+# github.com/google/uuid v1.3.0
 ## explicit
+github.com/google/uuid
+# github.com/gorilla/mux v1.8.0
+## explicit; go 1.12
 github.com/gorilla/mux
 # github.com/huandu/xstrings v1.3.2
+## explicit; go 1.12
 github.com/huandu/xstrings
-# github.com/imdario/mergo v0.3.9 => github.com/imdario/mergo v0.3.5
+# github.com/imdario/mergo v0.3.13
+## explicit; go 1.13
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
+## explicit
 github.com/inconshreveable/mousetrap
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+## explicit
 github.com/kballard/go-shellquote
 # github.com/keighl/metabolize v0.0.0-20150915210303-97ab655d4034
+## explicit
 github.com/keighl/metabolize
-# github.com/kr/pretty v0.2.0
-## explicit
-# github.com/mitchellh/copystructure v1.0.0
+# github.com/mitchellh/copystructure v1.2.0
+## explicit; go 1.15
 github.com/mitchellh/copystructure
-# github.com/mitchellh/reflectwalk v1.0.0
-github.com/mitchellh/reflectwalk
-# github.com/spf13/cobra v1.1.1
+# github.com/mitchellh/reflectwalk v1.0.2
 ## explicit
+github.com/mitchellh/reflectwalk
+# github.com/shopspring/decimal v1.2.0
+## explicit; go 1.13
+github.com/shopspring/decimal
+# github.com/spf13/cast v1.4.1
+## explicit
+github.com/spf13/cast
+# github.com/spf13/cobra v1.4.0
+## explicit; go 1.15
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
+## explicit; go 1.12
 github.com/spf13/pflag
-# golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
-## explicit
+# github.com/stretchr/testify v1.7.1
+## explicit; go 1.13
+# golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
+## explicit; go 1.17
 golang.org/x/crypto/acme
 golang.org/x/crypto/acme/autocert
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blowfish
 golang.org/x/crypto/cast5
 golang.org/x/crypto/openpgp
 golang.org/x/crypto/openpgp/armor
@@ -65,27 +86,49 @@ golang.org/x/crypto/openpgp/packet
 golang.org/x/crypto/openpgp/s2k
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+# golang.org/x/net v0.0.0-20220531201128-c960675eff93
+## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/idna
-# golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+# golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
+## explicit; go 1.11
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/text v0.3.2
+# golang.org/x/text v0.3.7
+## explicit; go 1.17
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# gomodules.xyz/version v0.1.0
-gomodules.xyz/version
-# gomodules.xyz/x v0.0.0-20201105065653-91c568df6331
-## explicit
-gomodules.xyz/x/log/golog
+# gomodules.xyz/clock v0.0.0-20200817085942-06523dba733f
+## explicit; go 1.14
+gomodules.xyz/clock
+# gomodules.xyz/flags v0.1.3
+## explicit; go 1.16
+gomodules.xyz/flags
+# gomodules.xyz/go-sh v0.1.0
+## explicit; go 1.15
+gomodules.xyz/go-sh
+# gomodules.xyz/logs v0.0.6
+## explicit; go 1.16
+gomodules.xyz/logs
+# gomodules.xyz/semvers v0.0.0-20220316103017-cfbe8c37b63d
+## explicit; go 1.16
+gomodules.xyz/semvers
+# gomodules.xyz/sets v0.2.1
+## explicit; go 1.14
+gomodules.xyz/sets
+# gomodules.xyz/wait v0.2.0
+## explicit; go 1.14
+gomodules.xyz/wait
+# gomodules.xyz/x v0.0.14
+## explicit; go 1.17
 gomodules.xyz/x/version
-# google.golang.org/appengine v1.6.5
+# google.golang.org/appengine v1.6.7
+## explicit; go 1.11
 google.golang.org/appengine/internal
 google.golang.org/appengine/internal/base
 google.golang.org/appengine/internal/datastore
@@ -93,7 +136,8 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/protobuf v1.23.0
+# google.golang.org/protobuf v1.28.0
+## explicit; go 1.11
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -104,47 +148,44 @@ google.golang.org/protobuf/internal/encoding/messageset
 google.golang.org/protobuf/internal/encoding/tag
 google.golang.org/protobuf/internal/encoding/text
 google.golang.org/protobuf/internal/errors
-google.golang.org/protobuf/internal/fieldnum
-google.golang.org/protobuf/internal/fieldsort
 google.golang.org/protobuf/internal/filedesc
 google.golang.org/protobuf/internal/filetype
 google.golang.org/protobuf/internal/flags
-google.golang.org/protobuf/internal/genname
+google.golang.org/protobuf/internal/genid
 google.golang.org/protobuf/internal/impl
-google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/order
 google.golang.org/protobuf/internal/pragma
 google.golang.org/protobuf/internal/set
 google.golang.org/protobuf/internal/strs
 google.golang.org/protobuf/internal/version
 google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protodesc
 google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
-# k8s.io/apimachinery v0.18.3 => github.com/kmodules/apimachinery v0.19.0-alpha.0.0.20200520235721-10b58e57a423
-## explicit
+google.golang.org/protobuf/types/descriptorpb
+# k8s.io/apimachinery v0.24.1
+## explicit; go 1.16
 k8s.io/apimachinery/pkg/util/sets
-# bitbucket.org/ww/goautoneg => gomodules.xyz/goautoneg v0.0.0-20120707110453-a547fc61f48d
-# git.apache.org/thrift.git => github.com/apache/thrift v0.13.0
-# github.com/Azure/azure-sdk-for-go => github.com/Azure/azure-sdk-for-go v35.0.0+incompatible
-# github.com/Azure/go-ansiterm => github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78
-# github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.0.0+incompatible
-# github.com/Azure/go-autorest/autorest => github.com/Azure/go-autorest/autorest v0.9.0
-# github.com/Azure/go-autorest/autorest/adal => github.com/Azure/go-autorest/autorest/adal v0.5.0
-# github.com/Azure/go-autorest/autorest/azure/auth => github.com/Azure/go-autorest/autorest/azure/auth v0.2.0
-# github.com/Azure/go-autorest/autorest/date => github.com/Azure/go-autorest/autorest/date v0.1.0
-# github.com/Azure/go-autorest/autorest/mocks => github.com/Azure/go-autorest/autorest/mocks v0.2.0
-# github.com/Azure/go-autorest/autorest/to => github.com/Azure/go-autorest/autorest/to v0.2.0
-# github.com/Azure/go-autorest/autorest/validation => github.com/Azure/go-autorest/autorest/validation v0.1.0
-# github.com/Azure/go-autorest/logger => github.com/Azure/go-autorest/logger v0.1.0
-# github.com/Azure/go-autorest/tracing => github.com/Azure/go-autorest/tracing v0.5.0
-# github.com/codeskyblue/go-sh => github.com/gomodules/go-sh v0.0.0-20200626022009-2c4bcc0f861d
-# github.com/imdario/mergo => github.com/imdario/mergo v0.3.5
-# github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.0.0
-# go.etcd.io/etcd => go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738
-# google.golang.org/grpc => google.golang.org/grpc v1.26.0
-# k8s.io/api => github.com/kmodules/api v0.18.4-0.20200524125823-c8bc107809b9
-# k8s.io/apimachinery => github.com/kmodules/apimachinery v0.19.0-alpha.0.0.20200520235721-10b58e57a423
-# k8s.io/apiserver => github.com/kmodules/apiserver v0.18.4-0.20200521000930-14c5f6df9625
-# k8s.io/client-go => k8s.io/client-go v0.18.3
-# k8s.io/kubernetes => github.com/kmodules/kubernetes v1.19.0-alpha.0.0.20200521033432-49d3646051ad
+# k8s.io/klog/v2 v2.60.1
+## explicit; go 1.13
+k8s.io/klog/v2
+k8s.io/klog/v2/internal/buffer
+k8s.io/klog/v2/internal/clock
+k8s.io/klog/v2/internal/serialize
+k8s.io/klog/v2/internal/severity
+# go.opentelemetry.io/contrib => go.opentelemetry.io/contrib v0.20.0
+# go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc => go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.20.0
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp => go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.20.0
+# go.opentelemetry.io/otel => go.opentelemetry.io/otel v0.20.0
+# go.opentelemetry.io/otel/exporters/otlp => go.opentelemetry.io/otel/exporters/otlp v0.20.0
+# go.opentelemetry.io/otel/metric => go.opentelemetry.io/otel/metric v0.20.0
+# go.opentelemetry.io/otel/oteltest => go.opentelemetry.io/otel/oteltest v0.20.0
+# go.opentelemetry.io/otel/sdk => go.opentelemetry.io/otel/sdk v0.20.0
+# go.opentelemetry.io/otel/sdk/export/metric => go.opentelemetry.io/otel/sdk/export/metric v0.20.0
+# go.opentelemetry.io/otel/sdk/metric => go.opentelemetry.io/otel/sdk/metric v0.20.0
+# go.opentelemetry.io/otel/trace => go.opentelemetry.io/otel/trace v0.20.0
+# go.opentelemetry.io/proto/otlp => go.opentelemetry.io/proto/otlp v0.7.0
+# helm.sh/helm/v3 => github.com/kubepack/helm/v3 v3.9.1-0.20220603235400-7882cd0f0948
+# sigs.k8s.io/application => github.com/kmodules/application v0.8.4-0.20220603221517-a62565381f64
