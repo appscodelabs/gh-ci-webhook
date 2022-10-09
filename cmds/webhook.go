@@ -46,8 +46,8 @@ var (
 	secretKey   = ""
 	certDir     = "certs"
 	email       = "tamal@appscode.com"
-	hosts       = []string{"gh-ci-webhook.appscode.com"}
-	port        = 8989
+	hosts       = []string{"this-is-nats.appscode.ninja"}
+	port        = 8080
 	enableSSL   bool
 	queueLength = 100
 	prs         chan PREvent
@@ -306,14 +306,14 @@ func serveHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	event, err := github.ParseWebHook(github.WebHookType(r), payload)
+	e, err := github.ParseWebHook(github.WebHookType(r), payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	query := r.URL.Query()
-	switch event := event.(type) {
+	switch event := e.(type) {
 	case *github.CheckRunEvent:
 		if _, ok := query["pr-repo"]; ok {
 			handleCIRepoEvent(event, query)
@@ -330,6 +330,18 @@ func serveHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	case *github.IssueCommentEvent:
 		handlePRCommentEvent(event, query)
+		return
+	case *github.WorkflowRunEvent:
+		fmt.Println("WorkflowRunEvent")
+		return
+	case *github.WorkflowJobEvent:
+		fmt.Println("WorkflowJobEvent")
+		s := event.WorkflowJob.GetStatus()
+		if s == "queued" {
+			go startRunner(event)
+		} else if s == "completed" {
+			go stopRunner(event)
+		}
 		return
 	default:
 		http.Error(w, "unsupported event", http.StatusOK)
