@@ -32,9 +32,9 @@ sudo journalctl -f -u gh-ci-webhook
 ## Configure Webhooks
 
 ## private repo
-`https://gh-ci-webhook.appscode.com/payload?ci-repo=github.com/appscode-cloud/grafana-tester&actions=closed`
+`https://this-is-nats.appscode.ninja/payload?ci-repo=github.com/appscode-cloud/grafana-tester&actions=closed`
 
 ## public repo
-`https://gh-ci-webhook.appscode.com/payload?pr-repo=github.com/appscode-cloud/private-repo`
+`https://this-is-nats.appscode.ninja/payload?pr-repo=github.com/appscode-cloud/private-repo`
 
 Also, set the `<uuid>` passed to gh-ci-webhook.service as the secret key.

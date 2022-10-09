@@ -4,15 +4,21 @@ go 1.18
 
 require (
 	github.com/alessio/shellescape v1.4.1
-	github.com/appscodelabs/release-automaton v0.0.38-0.20220620234603-a7f3bd4ed885
+	github.com/appscodelabs/release-automaton v0.0.38-0.20220926203645-0c0d75683acf
 	github.com/google/go-github/v45 v45.1.0
 	github.com/gorilla/mux v1.8.0
+	github.com/linode/linodego v1.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.4.0
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
+	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.6
+	gomodules.xyz/password-generator v0.2.8
+	gomodules.xyz/pointer v0.1.0
 	gomodules.xyz/x v0.0.14
 	k8s.io/apimachinery v0.24.1
+	k8s.io/klog/v2 v2.60.1
 )
 
 require (
@@ -21,6 +27,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-resty/resty/v2 v2.1.1-0.20191201195748-d7b97669fe48 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -34,9 +41,7 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/testify v1.7.1 // indirect
 	golang.org/x/net v0.0.0-20220531201128-c960675eff93 // indirect
-	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gomodules.xyz/clock v0.0.0-20200817085942-06523dba733f // indirect
 	gomodules.xyz/flags v0.1.3 // indirect
@@ -45,7 +50,8 @@ require (
 	gomodules.xyz/wait v0.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
-	k8s.io/klog/v2 v2.60.1 // indirect
+	gopkg.in/ini.v1 v1.66.6 // indirect
+	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 )
 
 replace (
