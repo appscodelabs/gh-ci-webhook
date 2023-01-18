@@ -111,6 +111,8 @@ type Client struct {
 	ObjectStorage             *Resource
 	Payments                  *Resource
 	Profile                   *Resource
+	ProfilePhoneNumber        *Resource
+	ProfileSecurityQuestions  *Resource
 	Regions                   *Resource
 	SSHKeys                   *Resource
 	StackScripts              *Resource
@@ -237,6 +239,7 @@ func (c *Client) SetRetries() *Client {
 		addRetryConditional(tooManyRequestsRetryCondition).
 		addRetryConditional(serviceUnavailableRetryCondition).
 		addRetryConditional(requestTimeoutRetryCondition).
+		addRetryConditional(requestNGINXRetryCondition).
 		SetRetryMaxWaitTime(APIRetryMaxWaitTime)
 	configureRetries(c)
 	return c
@@ -467,6 +470,8 @@ func addResources(client *Client) {
 		objectStorageName:            NewResource(client, objectStorageName, objectStorageEndpoint, false, nil, nil),
 		paymentsName:                 NewResource(client, paymentsName, paymentsEndpoint, false, Payment{}, PaymentsPagedResponse{}),
 		profileName:                  NewResource(client, profileName, profileEndpoint, false, nil, nil), // really?
+		profilePhoneNumberName:       NewResource(client, profilePhoneNumberName, profilePhoneNumberEndpoint, false, nil, nil),
+		profileSecurityQuestionsName: NewResource(client, profileSecurityQuestionsName, profileSecurityQuestionsEndpoint, false, nil, nil),
 		regionsName:                  NewResource(client, regionsName, regionsEndpoint, false, Region{}, RegionsPagedResponse{}),
 		sshkeysName:                  NewResource(client, sshkeysName, sshkeysEndpoint, false, SSHKey{}, SSHKeysPagedResponse{}),
 		stackscriptsName:             NewResource(client, stackscriptsName, stackscriptsEndpoint, false, Stackscript{}, StackscriptsPagedResponse{}),
@@ -527,6 +532,8 @@ func addResources(client *Client) {
 	client.ObjectStorage = resources[objectStorageName]
 	client.Payments = resources[paymentsName]
 	client.Profile = resources[profileName]
+	client.ProfilePhoneNumber = resources[profilePhoneNumberName]
+	client.ProfileSecurityQuestions = resources[profileSecurityQuestionsName]
 	client.Regions = resources[regionsName]
 	client.SSHKeys = resources[sshkeysName]
 	client.StackScripts = resources[stackscriptsName]

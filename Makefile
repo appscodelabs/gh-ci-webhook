@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 SHELL=/bin/bash -o pipefail
 
 GO_PKG   := github.com/appscodelabs
@@ -44,7 +43,7 @@ endif
 ### These variables should not need tweaking.
 ###
 
-SRC_PKGS := cmds
+SRC_PKGS := pkg
 SRC_DIRS := $(SRC_PKGS) *.go # directories which hold app source (not vendored)
 
 DOCKER_PLATFORMS := linux/amd64 linux/arm linux/arm64
