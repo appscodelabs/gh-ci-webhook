@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
+
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"gomodules.xyz/wait"
@@ -42,6 +44,8 @@ type Options struct {
 
 	NumReplicas int
 	NumWorkers  int
+
+	Provider string
 }
 
 func DefaultOptions() Options {
@@ -72,6 +76,8 @@ type Manager struct {
 
 	numReplicas          int
 	numWorkersPerReplica int
+
+	p api.Interface
 }
 
 func New(nc *nats.Conn, opts Options) *Manager {
@@ -83,6 +89,7 @@ func New(nc *nats.Conn, opts Options) *Manager {
 		name:                 opts.Name,
 		numReplicas:          opts.NumReplicas,
 		numWorkersPerReplica: opts.NumWorkers,
+		p:                    api.MustProvider(opts.Provider),
 	}
 }
 
@@ -91,6 +98,11 @@ const (
 )
 
 func (mgr *Manager) Start(ctx context.Context, jsmOpts ...nats.JSOpt) error {
+	err := mgr.p.Init()
+	if err != nil {
+		return errors.Wrap(err, "failed to init provider")
+	}
+
 	jsm, err := mgr.ensureStream(jsmOpts...)
 	if err != nil {
 		return err
@@ -187,6 +199,12 @@ func (mgr *Manager) runWorker() {
 }
 
 func (mgr *Manager) processNextMsg() (err error) {
+	slot, found := mgr.p.Next()
+	if !found {
+		return errors.New("Instance not available")
+	}
+	defer mgr.p.Done(slot)
+
 	var msgs []*nats.Msg
 	msgs, err = mgr.scanSub.Fetch(1, nats.MaxWait(NatsRequestTimeout))
 	if err != nil || len(msgs) == 0 {
@@ -196,7 +214,7 @@ func (mgr *Manager) processNextMsg() (err error) {
 		return err
 	}
 
-	if e2 := ProcessPayload(msgs[0].Data); e2 != nil {
+	if e2 := mgr.ProcessPayload(slot, msgs[0].Data); e2 != nil {
 		err = errors.Wrap(e2, "failed to process payload")
 	}
 

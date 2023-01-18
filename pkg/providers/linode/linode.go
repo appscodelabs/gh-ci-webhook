@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package providers
+package linode
 
 import (
 	"context"
@@ -23,10 +23,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
+
 	"github.com/google/go-github/v49/github"
 	"github.com/linode/linodego"
 	"golang.org/x/oauth2"
-	passgen "gomodules.xyz/password-generator"
 	"gomodules.xyz/pointer"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
@@ -37,7 +39,29 @@ const (
 	RetryTimeout  = 3 * time.Minute
 )
 
-func StopRunner(e *github.WorkflowJobEvent) {
+type impl struct{}
+
+var _ api.Interface = &impl{}
+
+func init() {
+	api.MustRegister(&impl{})
+}
+
+func (_ impl) Name() string {
+	return "linode"
+}
+
+func (_ impl) Init() error {
+	return nil
+}
+
+func (_ impl) Next() (any, bool) {
+	return nil, true
+}
+
+func (_ impl) Done(slot any) {}
+
+func (_ impl) StopRunner(_ any, e *github.WorkflowJobEvent) {
 	c := NewClient()
 
 	machineName := fmt.Sprintf("%s-%s-%d", e.Org.GetLogin(), e.Repo.GetName(), e.GetWorkflowJob().GetID())
@@ -76,21 +100,21 @@ func StopRunner(e *github.WorkflowJobEvent) {
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
-	err = DeleteRunner(ctx, client, e.Repo, machineName)
+	err = providers.DeleteRunner(ctx, client, e.Repo, machineName)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("deleted machine:", machineName)
 }
 
-func StartRunner(e *github.WorkflowJobEvent) {
+func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) {
 	c := NewClient()
 
 	machineName := fmt.Sprintf("%s-%s-%d", e.Org.GetLogin(), e.Repo.GetName(), e.GetWorkflowJob().GetID())
 	fmt.Println(machineName)
 
 	// machineName := "gh-runner-" + passgen.Generate(6)
-	id, err := createInstance(c, machineName, fmt.Sprintf("%s/%s", e.Org.GetLogin(), e.Repo.GetName()), 1018111)
+	id, err := createInstance(c, machineName, fmt.Sprintf("%s/%s", e.Org.GetLogin(), e.Repo.GetName()))
 	if err != nil {
 		panic(err)
 	}
@@ -98,8 +122,7 @@ func StartRunner(e *github.WorkflowJobEvent) {
 }
 
 func NewClient() *linodego.Client {
-	token := os.Getenv("LINODE_CLI_TOKEN")
-	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: DefaultOptions.Token})
 
 	oauth2Client := &http.Client{
 		Transport: &oauth2.Transport{
@@ -111,7 +134,7 @@ func NewClient() *linodego.Client {
 	return &c
 }
 
-func createInstance(c *linodego.Client, machineName, runnerOwner string, scriptID int) (int, error) {
+func createInstance(c *linodego.Client, machineName, runnerOwner string) (int, error) {
 	sshKeys, err := c.ListSSHKeys(context.Background(), &linodego.ListOptions{})
 	if err != nil {
 		return 0, err
@@ -121,21 +144,19 @@ func createInstance(c *linodego.Client, machineName, runnerOwner string, scriptI
 		authorizedKeys = append(authorizedKeys, r.SSHKey)
 	}
 
-	rootPassword := passgen.Generate(20)
-	fmt.Println("rootPassword:", rootPassword)
 	createOpts := linodego.InstanceCreateOptions{
 		Label:          machineName,
-		Region:         "us-central",
-		Type:           "g6-standard-4", // "g6-nanode-1",
-		RootPass:       rootPassword,
+		Region:         DefaultOptions.Region,
+		Type:           DefaultOptions.MachineType,
+		RootPass:       DefaultOptions.RootPassword,
 		AuthorizedKeys: authorizedKeys,
 		StackScriptData: map[string]string{
-			"runner_cfg_pat": os.Getenv("GITHUB_TOKEN"),
+			"runner_cfg_pat": DefaultOptions.GitHubToken,
 			"runner_owner":   runnerOwner,
 			"runner_name":    machineName,
 		},
-		StackScriptID:  scriptID,
-		Image:          "linode/ubuntu20.04",
+		StackScriptID:  DefaultOptions.StackScriptID,
+		Image:          DefaultOptions.Image,
 		BackupsEnabled: false,
 		PrivateIP:      true,
 		SwapSize:       pointer.IntP(0),

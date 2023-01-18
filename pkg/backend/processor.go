@@ -22,8 +22,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
-
 	"github.com/google/go-github/v49/github"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
@@ -49,7 +47,7 @@ func SubmitPayload(nc *nats.Conn, r *http.Request, secretToken []byte) error {
 	return nil
 }
 
-func ProcessPayload(payload []byte) error {
+func (mgr *Manager) ProcessPayload(slot any, payload []byte) error {
 	eventType, payload, found := bytes.Cut(payload, []byte(":"))
 	if !found {
 		return errors.New("invalid payload format")
@@ -88,10 +86,10 @@ func ProcessPayload(payload []byte) error {
 		s := event.WorkflowJob.GetStatus()
 		if s == "queued" {
 			StartRunner(event)
-			providers.StartRunner(event)
+			mgr.p.StartRunner(slot, event)
 		} else if s == "completed" {
 			StopRunner(event)
-			providers.StopRunner(event)
+			mgr.p.StopRunner(slot, event)
 		}
 		return nil
 	default:
