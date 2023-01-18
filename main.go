@@ -1,5 +1,5 @@
 /*
-Copyright AppsCode Inc.
+Copyright AppsCode Inc. and Contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package main
 import (
 	"os"
 
-	"github.com/appscodelabs/gh-ci-webhook/cmds"
+	"github.com/appscodelabs/gh-ci-webhook/pkg/cmds"
 
 	"gomodules.xyz/logs"
 )
