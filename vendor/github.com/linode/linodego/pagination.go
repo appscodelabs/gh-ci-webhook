@@ -6,6 +6,9 @@ package linodego
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/go-resty/resty/v2"
@@ -31,6 +34,21 @@ func NewListOptions(page int, filter string) *ListOptions {
 	return &ListOptions{PageOptions: &PageOptions{Page: page}, Filter: filter}
 }
 
+// Hash returns the sha256 hash of the provided ListOptions.
+// This is necessary for caching purposes.
+func (l ListOptions) Hash() (string, error) {
+	data, err := json.Marshal(l)
+	if err != nil {
+		return "", fmt.Errorf("failed to cache ListOptions: %s", err)
+	}
+
+	h := sha256.New()
+
+	h.Write(data)
+
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
 func applyListOptionsToRequest(opts *ListOptions, req *resty.Request) {
 	if opts != nil {
 		if opts.PageOptions != nil && opts.Page > 0 {
@@ -48,7 +66,7 @@ func applyListOptionsToRequest(opts *ListOptions, req *resty.Request) {
 }
 
 type PagedResponse interface {
-	endpoint(*Client, ...any) string
+	endpoint(...any) string
 	castResult(*resty.Request, string) (int, int, error)
 }
 
@@ -61,7 +79,7 @@ func (c *Client) listHelper(ctx context.Context, pager PagedResponse, opts *List
 	req := c.R(ctx)
 	applyListOptionsToRequest(opts, req)
 
-	pages, results, err := pager.castResult(req, pager.endpoint(c, ids...))
+	pages, results, err := pager.castResult(req, pager.endpoint(ids...))
 	if err != nil {
 		return err
 	}

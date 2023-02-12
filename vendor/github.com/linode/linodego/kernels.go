@@ -25,12 +25,8 @@ type LinodeKernelsPagedResponse struct {
 	Data []LinodeKernel `json:"data"`
 }
 
-func (LinodeKernelsPagedResponse) endpoint(c *Client, _ ...any) string {
-	endpoint, err := c.Kernels.Endpoint()
-	if err != nil {
-		panic(err)
-	}
-	return endpoint
+func (LinodeKernelsPagedResponse) endpoint(_ ...any) string {
+	return "linode/kernels"
 }
 
 func (resp *LinodeKernelsPagedResponse) castResult(r *resty.Request, e string) (int, int, error) {
@@ -43,28 +39,45 @@ func (resp *LinodeKernelsPagedResponse) castResult(r *resty.Request, e string) (
 	return castedRes.Pages, castedRes.Results, nil
 }
 
-// ListKernels lists linode kernels
+// ListKernels lists linode kernels. This endpoint is cached by default.
 func (c *Client) ListKernels(ctx context.Context, opts *ListOptions) ([]LinodeKernel, error) {
 	response := LinodeKernelsPagedResponse{}
-	err := c.listHelper(ctx, &response, opts)
+
+	endpoint, err := generateListCacheURL(response.endpoint(), opts)
 	if err != nil {
 		return nil, err
 	}
+
+	if result := c.getCachedResponse(endpoint); result != nil {
+		return result.([]LinodeKernel), nil
+	}
+
+	err = c.listHelper(ctx, &response, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	c.addCachedResponse(endpoint, response.Data, nil)
+
 	return response.Data, nil
 }
 
-// GetKernel gets the kernel with the provided ID
+// GetKernel gets the kernel with the provided ID. This endpoint is cached by default.
 func (c *Client) GetKernel(ctx context.Context, kernelID string) (*LinodeKernel, error) {
-	e, err := c.Kernels.Endpoint()
+	e := fmt.Sprintf("linode/kernels/%s", kernelID)
+
+	if result := c.getCachedResponse(e); result != nil {
+		result := result.(LinodeKernel)
+		return &result, nil
+	}
+
+	req := c.R(ctx).SetResult(&LinodeKernel{})
+	r, err := coupleAPIErrors(req.Get(e))
 	if err != nil {
 		return nil, err
 	}
-	e = fmt.Sprintf("%s/%s", e, kernelID)
-	r, err := c.R(ctx).
-		SetResult(&LinodeKernel{}).
-		Get(e)
-	if err != nil {
-		return nil, err
-	}
+
+	c.addCachedResponse(e, r.Result(), nil)
+
 	return r.Result().(*LinodeKernel), nil
 }

@@ -26,7 +26,7 @@ import (
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v50/github"
 	"github.com/linode/linodego"
 	"golang.org/x/oauth2"
 	"gomodules.xyz/pointer"

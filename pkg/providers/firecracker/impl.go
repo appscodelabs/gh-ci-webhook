@@ -24,7 +24,7 @@ import (
 
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v50/github"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 	"gomodules.xyz/x/ioutil"

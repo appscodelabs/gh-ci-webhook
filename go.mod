@@ -8,18 +8,18 @@ require (
 	github.com/firecracker-microvm/firecracker-go-sdk v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/google/go-containerregistry v0.12.1
-	github.com/google/go-github/v49 v49.1.0
-	github.com/linode/linodego v1.9.3
-	github.com/nats-io/nats.go v1.22.1
+	github.com/google/go-github/v50 v50.0.0
+	github.com/linode/linodego v1.14.1
+	github.com/nats-io/nats.go v1.23.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/pflag v1.0.5
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
 	gocloud.dev v0.28.0
-	golang.org/x/crypto v0.3.0
+	golang.org/x/crypto v0.5.0
 	golang.org/x/oauth2 v0.2.0
-	golang.org/x/sys v0.3.0
+	golang.org/x/sys v0.4.0
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.6
 	gomodules.xyz/oneliners v0.0.1
@@ -82,8 +82,8 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f // indirect
 	go.mongodb.org/mongo-driver v1.10.2 // indirect
-	golang.org/x/net v0.4.1-0.20221210045730-e1ec361d0b39 // indirect
-	golang.org/x/text v0.5.1-0.20221206182405-ec5565b1b747 // indirect
+	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gomodules.xyz/clock v0.0.0-20200817085942-06523dba733f // indirect
 	gomodules.xyz/flags v0.1.3 // indirect
