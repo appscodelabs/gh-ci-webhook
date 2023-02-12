@@ -44,6 +44,5 @@ jobs:
             bin/gh-ci-webhook-linux-amd64
             bin/gh-ci-webhook-linux-arm
             bin/gh-ci-webhook-linux-arm64
-            bin/gh-ci-webhook-darwin-amd64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
