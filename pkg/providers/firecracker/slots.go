@@ -16,14 +16,20 @@ limitations under the License.
 
 package firecracker
 
-import "sync"
+import (
+	"sync"
+
+	passgen "gomodules.xyz/password-generator"
+)
 
 type Instance struct {
 	ID    int
+	UID   string
 	InUse bool
 }
 
 func (i *Instance) Free() {
+	i.UID = ""
 	i.InUse = false
 }
 
@@ -48,6 +54,7 @@ func (i *Instances) Next() (*Instance, bool) {
 
 	for id, slot := range i.slots {
 		if !slot.InUse {
+			i.slots[id].UID = passgen.GenerateForCharset(6, passgen.AlphaNum)
 			i.slots[id].InUse = true
 			return &i.slots[id], true
 		}

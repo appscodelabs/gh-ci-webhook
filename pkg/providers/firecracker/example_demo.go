@@ -34,6 +34,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/sys/unix"
 	"gomodules.xyz/oneliners"
+	passgen "gomodules.xyz/password-generator"
 	"gomodules.xyz/pointer"
 )
 
@@ -91,7 +92,7 @@ func withNetworkInterface(networkInterface sdk.NetworkInterface) configOpt {
 	}
 }
 
-func createNewConfig(socketPath string, opts ...configOpt) sdk.Config {
+func createNewConfig(ins *Instance, socketPath string, opts ...configOpt) sdk.Config {
 	cpuTemplate := models.CPUTemplate(models.CPUTemplateT2)
 	smt := false
 
@@ -114,7 +115,7 @@ func createNewConfig(socketPath string, opts ...configOpt) sdk.Config {
 				DriveID:      &driveID,
 				IsRootDevice: &isRootDevice,
 				IsReadOnly:   &isReadOnly,
-				PathOnHost:   pointer.StringP(DefaultOptions.RootFSPath()),
+				PathOnHost:   pointer.StringP(WorkflowRunRootFSPath(ins.UID)),
 			},
 		},
 	}
@@ -155,7 +156,7 @@ func connectToVM(m *sdk.Machine, sshKeyPath string) (*ssh.Client, error) {
 	return ssh.Dial("tcp", fmt.Sprintf("%s:22", ip), config)
 }
 
-func createSnapshotSSH(ctx context.Context, instanceID int, socketPath string) string {
+func createSnapshotSSH(ctx context.Context, ins *Instance, socketPath string) string {
 	//dir, err := os.Getwd()
 	//if err != nil {
 	//	log.Fatal(err)
@@ -196,10 +197,10 @@ func createSnapshotSSH(ctx context.Context, instanceID int, socketPath string) s
 	// binary.Write(a, binary.LittleEndian, myInt)
 	// ip0 := fmt.Sprintf("%s.%d", VMS_NETWORK_PREFIX, (instanceID+1)*2)
 	// ip1 := fmt.Sprintf("%s.%d", VMS_NETWORK_PREFIX, (instanceID+1)*2+1)
-	ip0 := fmt.Sprintf("%s.%d", VMS_NETWORK_PREFIX, instanceID*4+1)
-	ip1 := fmt.Sprintf("%s.%d", VMS_NETWORK_PREFIX, instanceID*4+2)
+	ip0 := fmt.Sprintf("%s.%d", VMS_NETWORK_PREFIX, ins.ID*4+1)
+	ip1 := fmt.Sprintf("%s.%d", VMS_NETWORK_PREFIX, ins.ID*4+2)
 
-	fmt.Println("instanceID:", instanceID)
+	fmt.Println("instanceID:", ins.ID)
 	eth0Mac := MacAddr(net.ParseIP(ip0).To4())
 	fmt.Println("ip0:", ip0, eth0Mac)
 	eth1Mac := MacAddr(net.ParseIP(ip1).To4())
@@ -207,20 +208,20 @@ func createSnapshotSSH(ctx context.Context, instanceID int, socketPath string) s
 
 	// tap0 := fmt.Sprintf("tap%d", (instanceID+1)*2)
 	// tap1 := fmt.Sprintf("tap%d", (instanceID+1)*2+1)
-	tap0 := fmt.Sprintf("tap%d", instanceID*4+1)
-	tap1 := fmt.Sprintf("tap%d", instanceID*4+2)
+	tap0 := fmt.Sprintf("tap%d", ins.ID*4+1)
+	tap1 := fmt.Sprintf("tap%d", ins.ID*4+2)
 
 	fmt.Println(tap0, tap1)
 	// TODO: enable again
-	//if _, err := CreateTap(tap0, ""); err != nil {
-	//	panic(err)
-	//}
-	//if _, err := CreateTap(tap1, fmt.Sprintf("%s/%d", ip0, VMS_NETWORK_SUBNET)); err != nil {
-	//	panic(err)
-	//}
-	//if err = SetupIPTables(egressIface, tap1); err != nil {
-	//	panic(err)
-	//}
+	if _, err := CreateTap(tap0, ""); err != nil {
+		panic(err)
+	}
+	if _, err := CreateTap(tap1, fmt.Sprintf("%s/%d", ip0, VMS_NETWORK_SUBNET)); err != nil {
+		panic(err)
+	}
+	if err = SetupIPTables(egressIface, tap1); err != nil {
+		panic(err)
+	}
 
 	nf0 := sdk.NetworkInterface{
 		StaticConfiguration: &sdk.StaticNetworkConfiguration{
@@ -250,7 +251,7 @@ func createSnapshotSSH(ctx context.Context, instanceID int, socketPath string) s
 
 	socketFile := fmt.Sprintf("%s.create", socketPath)
 
-	cfg := createNewConfig(socketFile, withNetworkInterface(nf0), withNetworkInterface(nf1))
+	cfg := createNewConfig(ins, socketFile, withNetworkInterface(nf0), withNetworkInterface(nf1))
 	cfg.MmdsAddress = net.ParseIP(MMDS_IP)
 	cfg.MmdsVersion = sdk.MMDSv1
 
@@ -352,7 +353,7 @@ func createSnapshotSSH(ctx context.Context, instanceID int, socketPath string) s
 	}()
 
 	{
-		mmds, err := BuildData(instanceID, "tamalsaha")
+		mmds, err := BuildData(ins.ID, "tamalsaha")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -542,6 +543,10 @@ func main() {
 	ctx := context.Background()
 
 	fmt.Println("SOCKET_PATH:___", socketPath)
-	ipToRestore := createSnapshotSSH(ctx, *instanceID, socketPath)
+	ins := Instance{
+		ID:  *instanceID,
+		UID: passgen.GenerateForCharset(6, passgen.AlphaNum),
+	}
+	ipToRestore := createSnapshotSSH(ctx, &ins, socketPath)
 	fmt.Println(ipToRestore)
 }

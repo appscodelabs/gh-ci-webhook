@@ -20,34 +20,50 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/google/go-github/v50/github"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
-	"k8s.io/klog/v2"
 )
 
-func SubmitPayload(nc *nats.Conn, r *http.Request, secretToken []byte) error {
+func SubmitPayload(nc *nats.Conn, stream string, r *http.Request, secretToken []byte) error {
 	eventType := github.WebHookType(r)
 	payload, err := github.ValidatePayload(r, secretToken)
 	if err != nil {
 		return err
 	}
-
-	var buf bytes.Buffer
-	buf.WriteString(eventType)
-	buf.WriteRune(':')
-	buf.Write(payload)
-
-	_, err = nc.Request(JobExecSubject, buf.Bytes(), NatsRequestTimeout)
+	e, err := github.ParseWebHook(eventType, payload)
 	if err != nil {
-		return errors.Wrap(err, "failed to store event in NATS")
+		return err
 	}
-	return nil
+
+	switch event := e.(type) {
+	case *github.WorkflowJobEvent:
+		// https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#about-autoscaling
+		// BUG: https://github.com/nats-io/natscli/issues/703
+		subj := fmt.Sprintf("%s.runs.%s.%d-%s-%d",
+			stream,
+			event.WorkflowJob.GetStatus(),
+			event.GetWorkflowJob().GetRunID(),
+			event.GetWorkflowJob().GetName(),
+			event.GetWorkflowJob().GetRunAttempt(),
+		)
+
+		var buf bytes.Buffer
+		buf.WriteString(eventType)
+		buf.WriteRune(':')
+		buf.Write(payload)
+		_, err = nc.Request(subj, buf.Bytes(), NatsRequestTimeout)
+		if err != nil {
+			return errors.Wrap(err, "failed to store event in NATS")
+		}
+		return nil
+	default:
+		return errors.New("unsupported event")
+	}
 }
 
-func (mgr *Manager) ProcessPayload(slot any, payload []byte) error {
+func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) error {
 	eventType, payload, found := bytes.Cut(payload, []byte(":"))
 	if !found {
 		return errors.New("invalid payload format")
@@ -58,61 +74,21 @@ func (mgr *Manager) ProcessPayload(slot any, payload []byte) error {
 		return err
 	}
 
-	var query url.Values
-	switch event := e.(type) {
-	case *github.CheckRunEvent:
-		if _, ok := query["pr-repo"]; ok {
-			handleCIRepoEvent(event, query)
-			return nil
-		}
-		if _, ok := query["ci-repo"]; ok {
-			handlePRRepoEvent(event, query)
-			return nil
-		}
+	mgr.p.StartRunner(slot, e.(*github.WorkflowJobEvent))
+	return nil
+}
 
-		return errors.New("unsupported event")
-	case *github.PullRequestEvent:
-		handlePREvent(event, query)
-		return nil
-	case *github.IssueCommentEvent:
-		handlePRCommentEvent(event, query)
-		return nil
-	case *github.WorkflowRunEvent:
-		fmt.Println("WorkflowRunEvent")
-		return nil
-	case *github.WorkflowJobEvent:
-		// https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#about-autoscaling
-		fmt.Println("WorkflowJobEvent")
-		s := event.WorkflowJob.GetStatus()
-		if s == "queued" {
-			StartRunner(event)
-			mgr.p.StartRunner(slot, event)
-		} else if s == "completed" {
-			StopRunner(event)
-			mgr.p.StopRunner(slot, event)
-		}
-		return nil
-	default:
-		return errors.New("unsupported event")
+func (mgr *Manager) ProcessCompletedMsg(payload []byte) error {
+	eventType, payload, found := bytes.Cut(payload, []byte(":"))
+	if !found {
+		return errors.New("invalid payload format")
 	}
-}
 
-func handlePRCommentEvent(event *github.IssueCommentEvent, query url.Values) {
-}
+	e, err := github.ParseWebHook(string(eventType), payload)
+	if err != nil {
+		return err
+	}
 
-func handlePRRepoEvent(event *github.CheckRunEvent, query url.Values) {
-}
-
-func handleCIRepoEvent(event *github.CheckRunEvent, query url.Values) {
-}
-
-func handlePREvent(event *github.PullRequestEvent, query url.Values) {
-}
-
-func StartRunner(event *github.WorkflowJobEvent) {
-	klog.InfoS("start runner", "event", event)
-}
-
-func StopRunner(event *github.WorkflowJobEvent) {
-	klog.InfoS(">>>>>>>>>>>>>>>> stop runner", "event", event)
+	mgr.p.StopRunner(e.(*github.WorkflowJobEvent))
+	return nil
 }

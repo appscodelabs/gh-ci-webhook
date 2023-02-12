@@ -90,6 +90,6 @@ func (opts *Options) InitrdPath() string {
 	return filepath.Join(opts.ImageDir, opts.OS, opts.OS+".initrd")
 }
 
-func WorkflowRunRootFSPath(runID int64) string {
-	return fmt.Sprintf("/tmp/%d.rootfs", runID)
+func WorkflowRunRootFSPath(uid string) string {
+	return filepath.Join(os.TempDir(), fmt.Sprintf("fc/%s/vm.rootfs", uid))
 }

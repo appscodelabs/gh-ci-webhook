@@ -18,6 +18,7 @@ limitations under the License.
 package cmds
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -28,6 +29,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/acme/autocert"
 	shell "gomodules.xyz/go-sh"
@@ -44,25 +46,36 @@ var (
 	queueLength = 100
 )
 
-func NewCmdRun() *cobra.Command {
+func NewCmdRun(ctx context.Context) *cobra.Command {
+	var (
+		ncOpts = backend.NewNATSOptions()
+		nc     *nats.Conn
+		stream = backend.StreamName
+	)
 	cmd := &cobra.Command{
 		Use:               "run",
 		Short:             "Run GitHub webhook server",
 		DisableAutoGenTag: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
-			nc, err = backend.NewConnection(addr, credFile)
+			nc, err = backend.NewConnection(ncOpts.Addr, ncOpts.CredFile)
 			if err != nil {
 				return err
 			}
 			defer nc.Drain() //nolint:errcheck
+
+			opts := backend.DefaultOptions()
+			mgr := backend.New(nc, opts)
+			if _, err = mgr.EnsureStream(); err != nil {
+				return err
+			}
 
 			if secretToken == "" {
 				secretToken = passgen.GenerateForCharset(20, passgen.AlphaNum)
 				fmt.Printf("using secret token %s\n", secretToken)
 			}
 
-			return runServer()
+			return runServer(nc, stream)
 		},
 	}
 
@@ -73,9 +86,9 @@ func NewCmdRun() *cobra.Command {
 	cmd.Flags().IntVar(&port, "port", port, "Port used when SSL is not enabled")
 	cmd.Flags().BoolVar(&enableSSL, "ssl", enableSSL, "Set true to enable SSL via Let's Encrypt")
 	cmd.Flags().IntVar(&queueLength, "queue-length", queueLength, "Length of queue used to hold pr events")
+	cmd.Flags().StringVar(&stream, "stream", stream, "Name of Jetstream")
 
-	cmd.Flags().StringVar(&addr, "nats-addr", addr, "NATS serve address")
-	cmd.Flags().StringVar(&credFile, "nats-credential-file", credFile, "PATH to NATS credential file")
+	ncOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }
@@ -90,7 +103,7 @@ type Response struct {
 	TLS     *tls.ConnectionState `json:"tls,omitempty"`
 }
 
-func runServer() error {
+func runServer(nc *nats.Conn, stream string) error {
 	sh := shell.NewSession()
 	sh.ShowCMD = true
 	sh.PipeFail = true
@@ -113,7 +126,13 @@ func runServer() error {
 		enc.SetIndent("", "  ")
 		_ = enc.Encode(resp)
 	})
-	r.Post("/*", serveHTTP)
+	r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
+		err := backend.SubmitPayload(nc, stream, r, []byte(secretToken))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	})
 
 	if !enableSSL {
 		addr := fmt.Sprintf(":%d", port)
@@ -151,12 +170,4 @@ func runServer() error {
 
 	fmt.Println("Listening to addr", server.Addr)
 	return server.ListenAndServeTLS("", "") // Key and cert are coming from Let's Encrypt
-}
-
-func serveHTTP(w http.ResponseWriter, r *http.Request) {
-	err := backend.SubmitPayload(nc, r, []byte(secretToken))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 }

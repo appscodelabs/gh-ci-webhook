@@ -4,7 +4,7 @@
 
 - Download pre-built binary into a server
 
-```console
+```bash
 curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.10/gh-ci-webhook-linux-amd64
 chmod +x gh-ci-webhook-linux-amd64
 mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
@@ -12,7 +12,7 @@ mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
 
 - Install systemd service
 
-```console
+```bash
 curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/raw/v0.0.10/hack/systemd/gh-ci-webhook.service
 chmod +x gh-ci-webhook.service
 
@@ -23,7 +23,7 @@ mv gh-ci-webhook.service /lib/systemd/system/gh-ci-webhook.service
 
 Now, you should be able to enable the service, start it, then monitor the logs by tailing the systemd journal:
 
-```console
+```bash
 sudo systemctl enable gh-ci-webhook.service
 sudo systemctl start gh-ci-webhook
 sudo journalctl -f -u gh-ci-webhook
@@ -38,3 +38,9 @@ sudo journalctl -f -u gh-ci-webhook
 `https://this-is-nats.appscode.ninja/payload?pr-repo=github.com/appscode-cloud/private-repo`
 
 Also, set the `<uuid>` passed to gh-ci-webhook.service as the secret key.
+
+## Configure NATS subject mapping
+
+```bash
+nats server mapping "ghactions.runs.*.*" "ghactions.machines.{{wildcard(1)}}.{{partition(1,2)}}"
+```
