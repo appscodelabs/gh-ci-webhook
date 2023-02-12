@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v50/github"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"k8s.io/klog/v2"
