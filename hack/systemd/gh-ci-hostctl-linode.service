@@ -1,6 +1,6 @@
 # ref: https://fabianlee.org/2017/05/21/golang-running-a-go-binary-as-a-systemd-service-on-ubuntu-16-04/
 [Unit]
-Description=GitHub Actions Webhook Server
+Description=GitHub Actions Host Controller
 After=network.target
 
 [Service]
@@ -16,18 +16,20 @@ startLimitIntervalSec=60
 # Env Vars
 Environment=NATS_USERNAME=admin
 Environment=NATS_PASSWORD=***
+Environment=GITHUB_TOKEN=***
+Environment=LINODE_CLI_TOKEN=***
 
 WorkingDirectory=/root
-ExecStart=/usr/local/bin/gh-ci-webhook run --secret-token=*** --ssl --nats-addr=localhost:4222
+ExecStart=/usr/local/bin/gh-ci-webhook hostctl --nats-addr=this-is-nats.appscode.ninja:4222
 
 # make sure log directory exists and owned by syslog
 PermissionsStartOnly=true
-ExecStartPre=/bin/mkdir -p /var/log/gh-ci-webhook
-ExecStartPre=/bin/chown syslog:adm /var/log/gh-ci-webhook
-ExecStartPre=/bin/chmod 755 /var/log/gh-ci-webhook
+ExecStartPre=/bin/mkdir -p /var/log/gh-ci-hostctl
+ExecStartPre=/bin/chown syslog:adm /var/log/gh-ci-hostctl
+ExecStartPre=/bin/chmod 755 /var/log/gh-ci-hostctl
 StandardOutput=syslog
 StandardError=syslog
-SyslogIdentifier=gh-ci-webhook
+SyslogIdentifier=gh-ci-hostctl
 
 [Install]
 WantedBy=multi-user.target
