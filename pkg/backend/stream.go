@@ -18,8 +18,7 @@ package backend
 
 import (
 	"context"
-	"os"
-	"runtime"
+	"fmt"
 	"strings"
 	"time"
 
@@ -31,106 +30,102 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type Options struct {
-	AckWait time.Duration
-
-	// same as stream
-	Stream string
-
-	// manager id, < 0 means auto detect
-	Id int
-	// hostname
-	Name string
-
-	NumReplicas int
-	NumWorkers  int
-
-	Provider string
-}
-
-func DefaultOptions() Options {
-	hostname, _ := os.Hostname()
-
-	return Options{
-		AckWait:     1 * time.Hour,
-		Stream:      "ghactions",
-		Id:          1,
-		Name:        hostname,
-		NumReplicas: 1,
-		NumWorkers:  runtime.GOMAXPROCS(0),
-	}
-}
-
 type Manager struct {
-	nc      *nats.Conn
-	scanSub *nats.Subscription
-	ackWait time.Duration
+	nc            *nats.Conn
+	subsQueued    *nats.Subscription
+	subsCompleted *nats.Subscription
+	ackWait       time.Duration
 
 	// same as stream
 	stream string
 
-	// manager id, < 0 means auto detect
-	id int
+	// manager MachineID, < 0 means auto detect
+	MachineID int
 	// hostname
-	name string
-
-	numReplicas          int
-	numWorkersPerReplica int
+	name       string
+	numWorkers int
 
 	p api.Interface
 }
 
 func New(nc *nats.Conn, opts Options) *Manager {
+	var p api.Interface
+	if opts.Provider != "" {
+		p = api.MustProvider(opts.Provider)
+	}
+
 	return &Manager{
-		nc:                   nc,
-		ackWait:              opts.AckWait,
-		stream:               opts.Stream,
-		id:                   opts.Id,
-		name:                 opts.Name,
-		numReplicas:          opts.NumReplicas,
-		numWorkersPerReplica: opts.NumWorkers,
-		p:                    api.MustProvider(opts.Provider),
+		nc:         nc,
+		ackWait:    opts.AckWait,
+		stream:     opts.Stream,
+		MachineID:  opts.MachineID,
+		name:       opts.Name,
+		numWorkers: opts.NumWorkers,
+		p:          p,
 	}
 }
 
-const (
-	JobExecSubject = "ghactions.queue.jobs"
-)
-
 func (mgr *Manager) Start(ctx context.Context, jsmOpts ...nats.JSOpt) error {
-	err := mgr.p.Init()
-	if err != nil {
-		return errors.Wrap(err, "failed to init provider")
+	if mgr.p != nil {
+		err := mgr.p.Init()
+		if err != nil {
+			return errors.Wrap(err, "failed to init provider")
+		}
 	}
 
-	jsm, err := mgr.ensureStream(jsmOpts...)
+	if mgr.MachineID < 0 {
+		return errors.New("machine ID is not set")
+	}
+
+	jsm, err := mgr.EnsureStream(jsmOpts...)
 	if err != nil {
 		return err
 	}
 
 	// create nats consumer
-	scanConsumerName := "workers"
-	err = mgr.addConsumer(jsm, scanConsumerName)
-	if err != nil {
-		return err
+	{
+		status := "queued"
+		consumerName := fmt.Sprintf("%s-%d", status, mgr.MachineID)
+		err = mgr.addConsumer(jsm, consumerName)
+		if err != nil {
+			return err
+		}
+		subj := fmt.Sprintf("%s.machines.%s.%d", mgr.stream, status, mgr.MachineID)
+		subsQueued, err := jsm.PullSubscribe(subj, consumerName, nats.Bind(mgr.stream, consumerName))
+		if err != nil {
+			return err
+		}
+		mgr.subsQueued = subsQueued
 	}
-	scanSubscription, err := jsm.PullSubscribe(JobExecSubject, scanConsumerName, nats.Bind(mgr.stream, scanConsumerName))
-	if err != nil {
-		return err
+
+	{
+		status := "completed"
+		consumerName := fmt.Sprintf("%s-%d", status, mgr.MachineID)
+		err = mgr.addConsumer(jsm, consumerName)
+		if err != nil {
+			return err
+		}
+		subj := fmt.Sprintf("%s.machines.%s.%d", mgr.stream, status, mgr.MachineID)
+		subsCompleted, err := jsm.PullSubscribe(subj, consumerName, nats.Bind(mgr.stream, consumerName))
+		if err != nil {
+			return err
+		}
+		mgr.subsCompleted = subsCompleted
 	}
-	mgr.scanSub = scanSubscription
 
 	// start workers
 	klog.Info("Starting workers")
-	// Launch two workers to process Foo resources
-	for i := 0; i < mgr.numWorkersPerReplica; i++ {
-		go wait.Until(mgr.runWorker, 5*time.Second, ctx.Done())
+	for i := 0; i < mgr.numWorkers; i++ {
+		go wait.Until(mgr.runQueuedWorker, 5*time.Second, ctx.Done())
+	}
+	for i := 0; i < mgr.numWorkers; i++ {
+		go wait.Until(mgr.runCompletedWorker, 5*time.Second, ctx.Done())
 	}
 
 	return nil
 }
 
-func (mgr *Manager) ensureStream(jsmOpts ...nats.JSOpt) (nats.JetStreamContext, error) {
+func (mgr *Manager) EnsureStream(jsmOpts ...nats.JSOpt) (nats.JetStreamContext, error) {
 	jsm, err := mgr.nc.JetStream(jsmOpts...)
 	if err != nil {
 		return nil, err
@@ -141,7 +136,7 @@ func (mgr *Manager) ensureStream(jsmOpts ...nats.JSOpt) (nats.JetStreamContext, 
 	if streamInfo == nil || err != nil && err.Error() == "nats: stream not found" {
 		_, err = jsm.AddStream(&nats.StreamConfig{
 			Name:     mgr.stream,
-			Subjects: []string{mgr.stream + ".queue.*"},
+			Subjects: []string{mgr.stream + ".machines.>"},
 			// https://docs.nats.io/nats-concepts/core-nats/queue#stream-as-a-queue
 			Retention:  nats.WorkQueuePolicy,
 			MaxMsgs:    -1,
@@ -160,23 +155,23 @@ func (mgr *Manager) ensureStream(jsmOpts ...nats.JSOpt) (nats.JetStreamContext, 
 	return jsm, nil
 }
 
-func (mgr *Manager) addConsumer(jsm nats.JetStreamContext, consumerName string) error {
+func (mgr *Manager) addConsumer(jsm nats.JetStreamContext, status string) error {
 	ackPolicy := nats.AckExplicitPolicy
 	_, err := jsm.AddConsumer(mgr.stream, &nats.ConsumerConfig{
-		Durable:   consumerName,
+		Durable:   fmt.Sprintf("%s-%d", status, mgr.MachineID),
 		AckPolicy: ackPolicy,
 		AckWait:   mgr.ackWait, // TODO: max for any task type
 		// The number of pulls that can be outstanding on a pull consumer, pulls received after this is reached are ignored
 		MaxWaiting: 1,
 		// max working set
-		MaxAckPending: mgr.numReplicas * mgr.numWorkersPerReplica,
+		MaxAckPending: 2 * mgr.numWorkers, // one for each status
 		// one request per worker
 		MaxRequestBatch: 1,
 		// max_expires the max amount of time that a pull request with an expires should be allowed to remain active
 		// MaxRequestExpires: 1 * time.Second,
 		DeliverPolicy: nats.DeliverAllPolicy,
 		MaxDeliver:    5,
-		FilterSubject: "",
+		FilterSubject: fmt.Sprintf("%s.machines.%s.%d", mgr.stream, status, mgr.MachineID),
 		ReplayPolicy:  nats.ReplayInstantPolicy,
 	})
 	if err != nil && !strings.Contains(err.Error(), "nats: consumer name already in use") {
@@ -185,9 +180,9 @@ func (mgr *Manager) addConsumer(jsm nats.JetStreamContext, consumerName string) 
 	return nil
 }
 
-func (mgr *Manager) runWorker() {
+func (mgr *Manager) runQueuedWorker() {
 	for {
-		err := mgr.processNextMsg()
+		err := mgr.processNextQueuedMsg()
 		if err != nil {
 			if !strings.Contains(err.Error(), nats.ErrTimeout.Error()) &&
 				!strings.Contains(err.Error(), "nats: Exceeded MaxWaiting") {
@@ -198,7 +193,7 @@ func (mgr *Manager) runWorker() {
 	}
 }
 
-func (mgr *Manager) processNextMsg() (err error) {
+func (mgr *Manager) processNextQueuedMsg() (err error) {
 	slot, found := mgr.p.Next()
 	if !found {
 		return errors.New("Instance not available")
@@ -206,7 +201,7 @@ func (mgr *Manager) processNextMsg() (err error) {
 	defer mgr.p.Done(slot)
 
 	var msgs []*nats.Msg
-	msgs, err = mgr.scanSub.Fetch(1, nats.MaxWait(NatsRequestTimeout))
+	msgs, err = mgr.subsQueued.Fetch(1, nats.MaxWait(NatsRequestTimeout))
 	if err != nil || len(msgs) == 0 {
 		// klog.Error(err)
 		// no more msg to process
@@ -214,7 +209,41 @@ func (mgr *Manager) processNextMsg() (err error) {
 		return err
 	}
 
-	if e2 := mgr.ProcessPayload(slot, msgs[0].Data); e2 != nil {
+	if e2 := mgr.ProcessQueuedMsg(slot, msgs[0].Data); e2 != nil {
+		err = errors.Wrap(e2, "failed to process payload")
+	}
+
+	// report failure ?
+	if e2 := msgs[0].Ack(); e2 != nil {
+		klog.ErrorS(e2, "failed ACK msg")
+	}
+	return err
+}
+
+func (mgr *Manager) runCompletedWorker() {
+	for {
+		err := mgr.processNextCompletedMsg()
+		if err != nil {
+			if !strings.Contains(err.Error(), nats.ErrTimeout.Error()) &&
+				!strings.Contains(err.Error(), "nats: Exceeded MaxWaiting") {
+				klog.Errorln(err)
+			}
+			break
+		}
+	}
+}
+
+func (mgr *Manager) processNextCompletedMsg() (err error) {
+	var msgs []*nats.Msg
+	msgs, err = mgr.subsCompleted.Fetch(1, nats.MaxWait(NatsRequestTimeout))
+	if err != nil || len(msgs) == 0 {
+		// klog.Error(err)
+		// no more msg to process
+		err = errors.Wrap(err, "failed to fetch msg")
+		return err
+	}
+
+	if e2 := mgr.ProcessCompletedMsg(msgs[0].Data); e2 != nil {
 		err = errors.Wrap(e2, "failed to process payload")
 	}
 

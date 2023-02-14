@@ -61,7 +61,7 @@ func (_ impl) Next() (any, bool) {
 
 func (_ impl) Done(slot any) {}
 
-func (_ impl) StopRunner(_ any, e *github.WorkflowJobEvent) {
+func (_ impl) StopRunner(e *github.WorkflowJobEvent) {
 	c := NewClient()
 
 	machineName := fmt.Sprintf("%s-%s-%d", e.Org.GetLogin(), e.Repo.GetName(), e.GetWorkflowJob().GetID())

@@ -28,17 +28,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	addr     = "this-is-nats.appscode.ninja:4222"
-	credFile string
-	nc       *nats.Conn
-
-	ghToken = os.Getenv("GITHUB_TOKEN")
-
-	provider string
-)
-
 func NewCmdHostctl(ctx context.Context) *cobra.Command {
+	var (
+		ghToken = os.Getenv("GITHUB_TOKEN")
+
+		opts   = backend.DefaultOptions()
+		ncOpts = backend.NewNATSOptions()
+		nc     *nats.Conn
+	)
 	cmd := &cobra.Command{
 		Use:               "hostctl",
 		Short:             "Run GitHub Actions runner host controller",
@@ -48,14 +45,12 @@ func NewCmdHostctl(ctx context.Context) *cobra.Command {
 			firecracker.DefaultOptions.GitHubToken = ghToken
 
 			var err error
-			nc, err = backend.NewConnection(addr, credFile)
+			nc, err = backend.NewConnection(ncOpts.Addr, ncOpts.CredFile)
 			if err != nil {
 				return err
 			}
 			defer nc.Drain() //nolint:errcheck
 
-			opts := backend.DefaultOptions()
-			opts.Provider = provider
 			mgr := backend.New(nc, opts)
 			if err := mgr.Start(ctx); err != nil {
 				return err
@@ -66,14 +61,11 @@ func NewCmdHostctl(ctx context.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&addr, "nats-addr", addr, "NATS serve address")
-	cmd.Flags().StringVar(&credFile, "nats-credential-file", credFile, "PATH to NATS credential file")
-
 	cmd.Flags().StringVar(&ghToken, "github-token", ghToken, "GitHub Token")
-
-	cmd.Flags().StringVar(&provider, "provider", provider, "Name of runner provider (linode, firecracker)")
 	linode.DefaultOptions.AddFlags(cmd.Flags())
 	firecracker.DefaultOptions.AddFlags(cmd.Flags())
+	opts.AddFlags(cmd.Flags())
+	ncOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }

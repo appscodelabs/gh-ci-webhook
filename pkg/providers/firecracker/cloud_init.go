@@ -152,8 +152,8 @@ func BuildData(instanceID int, ghUsernames ...string) (*MMDSConfig, error) {
 				SSHAuthorizedKeys: keys,
 			},
 			{
-				Name: "runner",
-				// PlainTextPasswd:   "ubuntu",
+				Name:              "runner",
+				PlainTextPasswd:   "ubuntu",
 				Gecos:             "GitHub Action Runner",
 				Shell:             "/bin/bash",
 				Groups:            strings.Join([]string{"sudo"}, ", "), // groups: "docker", users, admin

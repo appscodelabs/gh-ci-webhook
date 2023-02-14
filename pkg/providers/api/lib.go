@@ -29,7 +29,7 @@ type Interface interface {
 	Next() (any, bool)
 	Done(any)
 	StartRunner(any, *github.WorkflowJobEvent)
-	StopRunner(any, *github.WorkflowJobEvent)
+	StopRunner(*github.WorkflowJobEvent)
 }
 
 var (

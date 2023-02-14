@@ -44,7 +44,7 @@ func (_ impl) Name() string {
 	return "firecracker"
 }
 
-func (p impl) Init() error {
+func (p *impl) Init() error {
 	p.ins = NewInstances(DefaultOptions.NumInstances)
 
 	/*
@@ -97,30 +97,31 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) {
 		return
 	}
 
-	err := ioutil.CopyFile(WorkflowRunRootFSPath(e.GetWorkflowJob().GetRunID()), DefaultOptions.RootFSPath())
+	wfRootFSPath := WorkflowRunRootFSPath(ins.UID)
+	wfDir := filepath.Dir(wfRootFSPath)
+	err := os.MkdirAll(wfDir, 0o755)
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(wfDir)
+
+	err = ioutil.CopyFile(wfRootFSPath, DefaultOptions.RootFSPath())
 	if err != nil {
 		panic(err)
 	}
 
 	// Setup socket and snapshot + memory paths
-	tempdir, err := os.MkdirTemp("", "gh-runners")
-	if err != nil {
-		panic(err)
-	}
-	defer os.Remove(tempdir)
-
-	socketPath := filepath.Join(tempdir, fmt.Sprintf("fc-%d", ins.ID))
+	socketPath := filepath.Join(wfDir, fmt.Sprintf("fc-%d", ins.ID))
+	fmt.Println("SOCKET_PATH:___", socketPath)
 
 	ctx := context.Background()
-
-	fmt.Println("SOCKET_PATH:___", socketPath)
-	ipToRestore := createSnapshotSSH(ctx, ins.ID, socketPath)
+	ipToRestore := createSnapshotSSH(ctx, ins, socketPath)
 	fmt.Println(ipToRestore)
 }
 
-func (p impl) StopRunner(slot any, e *github.WorkflowJobEvent) {
-	ins := slot.(*Instance)
-	if ins == nil {
-		return
-	}
+func (p impl) StopRunner(e *github.WorkflowJobEvent) {
+	//ins := slot.(*Instance)
+	//if ins == nil {
+	//	return
+	//}
 }
