@@ -85,12 +85,12 @@ func (mgr *Manager) Start(ctx context.Context, jsmOpts ...nats.JSOpt) error {
 	// create nats consumer
 	{
 		status := "queued"
-		consumerName := fmt.Sprintf("%s-%d", status, mgr.MachineID)
-		err = mgr.addConsumer(jsm, consumerName)
+		err = mgr.addConsumer(jsm, status)
 		if err != nil {
 			return err
 		}
 		subj := fmt.Sprintf("%s.machines.%s.%d", mgr.stream, status, mgr.MachineID)
+		consumerName := fmt.Sprintf("%s-%d", status, mgr.MachineID)
 		subsQueued, err := jsm.PullSubscribe(subj, consumerName, nats.Bind(mgr.stream, consumerName))
 		if err != nil {
 			return err
@@ -100,12 +100,12 @@ func (mgr *Manager) Start(ctx context.Context, jsmOpts ...nats.JSOpt) error {
 
 	{
 		status := "completed"
-		consumerName := fmt.Sprintf("%s-%d", status, mgr.MachineID)
-		err = mgr.addConsumer(jsm, consumerName)
+		err = mgr.addConsumer(jsm, status)
 		if err != nil {
 			return err
 		}
 		subj := fmt.Sprintf("%s.machines.%s.%d", mgr.stream, status, mgr.MachineID)
+		consumerName := fmt.Sprintf("%s-%d", status, mgr.MachineID)
 		subsCompleted, err := jsm.PullSubscribe(subj, consumerName, nats.Bind(mgr.stream, consumerName))
 		if err != nil {
 			return err

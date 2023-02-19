@@ -17,28 +17,17 @@ limitations under the License.
 package cmds
 
 import (
-	"flag"
-
 	"github.com/spf13/cobra"
-	"gomodules.xyz/signals"
-	v "gomodules.xyz/x/version"
 )
 
-func NewRootCmd() *cobra.Command {
-	rootCmd := &cobra.Command{
-		Use:               "gh-ci [command]",
-		Short:             `gh-ci by AppsCode - GitHub CI for private repos`,
+func NewCmdFirecracker() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "firecracker",
+		Short:             "Firecracker sub commands",
 		DisableAutoGenTag: true,
 	}
+	cmd.AddCommand(NewCmdFirecrackerCreateVM())
+	cmd.AddCommand(NewCmdFirecrackerCreateTAPDevice())
 
-	flags := rootCmd.PersistentFlags()
-	flags.AddGoFlagSet(flag.CommandLine)
-
-	ctx := signals.SetupSignalContext()
-
-	rootCmd.AddCommand(NewCmdRun(ctx))
-	rootCmd.AddCommand(NewCmdHostctl(ctx))
-	rootCmd.AddCommand(NewCmdFirecracker())
-	rootCmd.AddCommand(v.NewCmdVersion())
-	return rootCmd
+	return cmd
 }

@@ -14,23 +14,38 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package dummy
 
 import (
-	"os"
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
-	"github.com/appscodelabs/gh-ci-webhook/pkg/cmds"
-	_ "github.com/appscodelabs/gh-ci-webhook/pkg/providers/registry"
-
-	"gomodules.xyz/logs"
+	"github.com/google/go-github/v50/github"
 )
 
-func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
+type impl struct{}
 
-	if err := cmds.NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
-	os.Exit(0)
+var _ api.Interface = &impl{}
+
+func init() {
+	api.MustRegister(&impl{})
+}
+
+func (_ impl) Name() string {
+	return "dummy"
+}
+
+func (_ impl) Init() error {
+	return nil
+}
+
+func (_ impl) Next() (any, bool) {
+	return nil, true
+}
+
+func (_ impl) Done(slot any) {}
+
+func (_ impl) StopRunner(e *github.WorkflowJobEvent) {
+}
+
+func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) {
 }

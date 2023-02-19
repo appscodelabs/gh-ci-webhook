@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
+	. "github.com/klauspost/cpuid/v2"
 	"github.com/spf13/pflag"
 )
 
@@ -53,7 +54,7 @@ func NewOptions() *Options {
 		OS:                    "focal",
 		ImageDir:              "",
 		FirecrackerBinaryPath: filepath.Join(dir, "firecracker"),
-		NumInstances:          8,
+		NumInstances:          CPU.LogicalCores / 4,
 		VcpuCount:             4,
 		MemSizeMib:            1024 * 16,
 	}

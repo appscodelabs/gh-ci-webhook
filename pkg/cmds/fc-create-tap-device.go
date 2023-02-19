@@ -17,28 +17,23 @@ limitations under the License.
 package cmds
 
 import (
-	"flag"
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/firecracker"
 
 	"github.com/spf13/cobra"
-	"gomodules.xyz/signals"
-	v "gomodules.xyz/x/version"
 )
 
-func NewRootCmd() *cobra.Command {
-	rootCmd := &cobra.Command{
-		Use:               "gh-ci [command]",
-		Short:             `gh-ci by AppsCode - GitHub CI for private repos`,
+func NewCmdFirecrackerCreateTAPDevice() *cobra.Command {
+	var device string
+	cmd := &cobra.Command{
+		Use:               "create-tap",
+		Short:             "Firecracker create TAP device",
 		DisableAutoGenTag: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := firecracker.CreateTap(device, "172.16.0.1/24")
+			return err
+		},
 	}
+	cmd.Flags().StringVar(&device, "name", device, "Name of TAP device (eg, tap1)")
 
-	flags := rootCmd.PersistentFlags()
-	flags.AddGoFlagSet(flag.CommandLine)
-
-	ctx := signals.SetupSignalContext()
-
-	rootCmd.AddCommand(NewCmdRun(ctx))
-	rootCmd.AddCommand(NewCmdHostctl(ctx))
-	rootCmd.AddCommand(NewCmdFirecracker())
-	rootCmd.AddCommand(v.NewCmdVersion())
-	return rootCmd
+	return cmd
 }

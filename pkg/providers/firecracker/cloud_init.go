@@ -121,7 +121,7 @@ func BuildNetCfg(eth0Mac, eth1Mac, ip0, ip1 string) (string, error) {
 	return cfg, nil
 }
 
-func BuildData(instanceID int, ghUsernames ...string) (*MMDSConfig, error) {
+func BuildData(ghOrg, ghToken string, instanceID int, ghUsernames ...string) (*MMDSConfig, error) {
 	/*
 		#cloud-config
 		users:
@@ -140,23 +140,20 @@ func BuildData(instanceID int, ghUsernames ...string) (*MMDSConfig, error) {
 	userData := UserData{
 		Users: []User{
 			{
-				Name: "default",
+				Name:              "default",
+				SSHAuthorizedKeys: keys,
 			},
 			{
-				Name: "root",
-				// PlainTextPasswd: "root",
-				Gecos: "Root user",
-				Shell: "/bin/bash",
-				// Groups:            strings.Join([]string{"sudo", "docker"}, ", "), // groups: users, admin
-				// Sudo:              "ALL=(ALL) NOPASSWD:ALL",
+				Name:              "root",
+				Gecos:             "Root user",
+				Shell:             "/bin/bash",
 				SSHAuthorizedKeys: keys,
 			},
 			{
 				Name:              "runner",
-				PlainTextPasswd:   "ubuntu",
 				Gecos:             "GitHub Action Runner",
 				Shell:             "/bin/bash",
-				Groups:            strings.Join([]string{"sudo"}, ", "), // groups: "docker", users, admin
+				Groups:            strings.Join([]string{"sudo"}, ", "),
 				Sudo:              "ALL=(ALL) NOPASSWD:ALL",
 				SSHAuthorizedKeys: keys,
 			},
@@ -164,19 +161,75 @@ func BuildData(instanceID int, ghUsernames ...string) (*MMDSConfig, error) {
 		Bootcmd: []string{
 			// BUG: https://bugs.launchpad.net/ubuntu/+source/cloud-initramfs-tools/+bug/1958260
 			"apt install --reinstall linux-modules-`uname -r`",
-			// "systemctl restart docker",
 		},
 	}
-	//udBytes, err := yaml.Marshal(userData)
-	//if err != nil {
-	//	return err
-	//}
 
-	script := `#!/bin/bash
-mkdir test-userscript
-touch /test-userscript/userscript.txt
-echo "Created by bash shell script" >> /test-userscript/userscript.txt
-`
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
+	runnerName := fmt.Sprintf("%s-%d", hostname, instanceID)
+
+	//	script := `#!/bin/bash
+	//mkdir test-userscript
+	//touch /test-userscript/userscript.txt
+	//echo "Created by bash shell script" >> /test-userscript/userscript.txt
+	//`
+
+	script := fmt.Sprintf(`#! /bin/bash
+set -x
+
+# <UDF name="runner_owner" label="GitHub Org or repo" />
+# <UDF name="runner_cfg_pat" label="GitHub Personal Token" />
+# <UDF name="runner_name" label="Runner Name" />
+
+exec >/root/stackscript.log 2>&1
+# http://redsymbol.net/articles/bash-exit-traps/
+# https://unix.stackexchange.com/a/308209
+function finish {
+    result=$?
+    [ ! -f /root/result.txt ] && echo $result > /root/result.txt
+}
+trap finish EXIT
+# https://cloud.linode.com/stackscripts/669224
+apt-get update
+apt upgrade -y
+apt remove docker docker-engine docker.io containerd runc
+apt-get install -y --no-install-recommends apt-transport-https ca-certificates linux-modules-`+"`uname -r`"+` curl jq gnupg-agent software-properties-common build-essential
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+apt-key fingerprint 0EBFCD88
+add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+apt update
+apt install docker-ce docker-ce-cli containerd.io -y
+echo \
+  "{
+    \"metrics-addr\" : \"0.0.0.0:9323\",
+    \"experimental\" : true
+  }" > /etc/docker/daemon.json
+systemctl restart docker
+hostnamectl set-hostname ${RUNNER_NAME}
+echo 127.0.1.1 $HOSTNAME.localdomain ${RUNNER_NAME} >> /etc/hosts
+
+# Prepare GitHun Runner user
+export USER=runner
+# https://docs.docker.com/engine/install/linux-postinstall/
+sudo usermod -aG docker $USER
+newgrp docker
+# Install GitHub Runner
+su $USER
+cd /home/$USER
+
+export RUNNER_OWNER=%s
+export RUNNER_CFG_PAT=%s
+export RUNNER_NAME=%s
+
+# https://github.com/actions/runner/blob/main/docs/automate.md
+# https://github.com/actions/actions-runner-controller/issues/84#issuecomment-756971038
+curl -s https://raw.githubusercontent.com/actions/runner/main/scripts/create-latest-svc.sh | bash -s -- -s ${RUNNER_OWNER} -n ${RUNNER_NAME} -l ubuntu-latest,ubuntu-20.04 -f
+`, ghOrg, ghToken, runnerName)
 
 	udBytes, err := PrepareCloudInitUserData(userData, script)
 	if err != nil {
@@ -185,8 +238,8 @@ echo "Created by bash shell script" >> /test-userscript/userscript.txt
 	fmt.Println(string(udBytes))
 
 	md := Metadata{
-		InstanceID:    fmt.Sprintf("i-%d", instanceID),
-		LocalHostname: "gh-runner",
+		InstanceID:    runnerName, // fmt.Sprintf("i-%d", instanceID),
+		LocalHostname: runnerName, // "gh-runner",
 	}
 	mdBytes, err := yaml.Marshal(md)
 	if err != nil {
@@ -200,13 +253,6 @@ echo "Created by bash shell script" >> /test-userscript/userscript.txt
 			UserData: string(udBytes),
 		},
 	}, nil
-
-	// return json.Marshal(lc)
-	//if err != nil {
-	//	return err
-	//}
-	//fmt.Println(string(data))
-	//return nil
 }
 
 // https://github.com/tamalsaha.keys
@@ -226,11 +272,6 @@ func getSSHPubKeys(ghUsernames ...string) ([]string, error) {
 		userKeys := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		keys = append(keys, userKeys...)
 	}
-
-	if data, err := os.ReadFile("/root/go/src/github.com/tamalsaha/learn-firecracker/examples/cmd/snapshotting/root-drive-ssh-pubkey"); err == nil {
-		keys = append(keys, string(data))
-	}
-
 	return keys, nil
 }
 
@@ -249,7 +290,6 @@ func PrepareCloudInitUserData(ud UserData, script string) ([]byte, error) {
 		Content-Type: multipart/mixed; boundary="//"
 		MIME-Version: 1.0
 	*/
-
 	mpHeader := textproto.MIMEHeader{}
 	// Set the Content-Type header
 	mpHeader.Set("Content-Type", `multipart/mixed; boundary="//"`)
@@ -263,10 +303,10 @@ func PrepareCloudInitUserData(ud UserData, script string) ([]byte, error) {
 		sort.Strings(keys)
 		for _, k := range keys {
 			for _, v := range mpHeader[k] {
-				fmt.Fprintf(body, "%s: %s\r\n", k, v)
+				_, _ = fmt.Fprintf(body, "%s: %s\r\n", k, v)
 			}
 		}
-		fmt.Fprintf(body, "\r\n")
+		_, _ = fmt.Fprintf(body, "\r\n")
 	}
 
 	udBytes, err := yaml.Marshal(ud)
@@ -288,7 +328,7 @@ func PrepareCloudInitUserData(ud UserData, script string) ([]byte, error) {
 		return nil, err
 	}
 	// Write the part body
-	cloudInitPart.Write([]byte("#cloud-config" + "\n" + string(udBytes)))
+	_, _ = cloudInitPart.Write([]byte("#cloud-config" + "\n" + string(udBytes)))
 
 	if strings.TrimSpace(script) != "" {
 		// Metadata part
@@ -305,11 +345,14 @@ func PrepareCloudInitUserData(ud UserData, script string) ([]byte, error) {
 			return nil, err
 		}
 		// Write the part body
-		scriptPart.Write([]byte(script))
+		_, _ = scriptPart.Write([]byte(script))
 	}
 
 	// Finish constructing the multipart request body
-	writer.Close()
+	err = writer.Close()
+	if err != nil {
+		return nil, err
+	}
 
 	return body.Bytes(), nil
 }
