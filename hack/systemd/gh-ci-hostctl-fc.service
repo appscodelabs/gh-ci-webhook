@@ -19,7 +19,7 @@ Environment=NATS_PASSWORD=***
 Environment=GITHUB_TOKEN=***
 
 WorkingDirectory=/root
-ExecStart=/usr/local/bin/gh-ci-webhook hostctl --nats-addr=this-is-nats.appscode.ninja:4222 --provider=firecracker --firecracker.binary-path=/root/firecracker --firecracker.os=focal --firecracker.image-dir=/root/images
+ExecStart=/usr/local/bin/gh-ci-webhook hostctl  --machine-id=* --nats-addr=this-is-nats.appscode.ninja:4222 --provider=firecracker --firecracker.binary-path=/root/firecracker --firecracker.os=focal --firecracker.image-dir=/root/images
 
 # make sure log directory exists and owned by syslog
 PermissionsStartOnly=true
