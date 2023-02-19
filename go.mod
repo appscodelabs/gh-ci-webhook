@@ -18,9 +18,9 @@ require (
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230206183746-70ca0345eede
 	github.com/zeebo/xxh3 v1.0.2
 	gocloud.dev v0.28.0
-	golang.org/x/crypto v0.5.0
-	golang.org/x/oauth2 v0.2.0
-	golang.org/x/sys v0.4.0
+	golang.org/x/crypto v0.6.0
+	golang.org/x/oauth2 v0.5.0
+	golang.org/x/sys v0.5.0
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.6
 	gomodules.xyz/password-generator v0.2.9
@@ -76,6 +76,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/nats-io/nats-server/v2 v2.9.14 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
@@ -83,8 +84,8 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f // indirect
 	go.mongodb.org/mongo-driver v1.10.2 // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gomodules.xyz/clock v0.0.0-20200817085942-06523dba733f // indirect
 	gomodules.xyz/flags v0.1.3 // indirect
