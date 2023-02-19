@@ -198,13 +198,12 @@ func (mgr *Manager) processNextQueuedMsg() (err error) {
 	if !found {
 		return errors.New("Instance not available")
 	}
-	defer mgr.p.Done(slot)
 
 	var msgs []*nats.Msg
 	msgs, err = mgr.subsQueued.Fetch(1, nats.MaxWait(NatsRequestTimeout))
 	if err != nil || len(msgs) == 0 {
-		// klog.Error(err)
 		// no more msg to process
+		mgr.p.Done(slot)
 		err = errors.Wrap(err, "failed to fetch msg")
 		return err
 	}
@@ -237,7 +236,6 @@ func (mgr *Manager) processNextCompletedMsg() (err error) {
 	var msgs []*nats.Msg
 	msgs, err = mgr.subsCompleted.Fetch(1, nats.MaxWait(NatsRequestTimeout))
 	if err != nil || len(msgs) == 0 {
-		// klog.Error(err)
 		// no more msg to process
 		err = errors.Wrap(err, "failed to fetch msg")
 		return err
