@@ -28,8 +28,8 @@ type Interface interface {
 	Init() error
 	Next() (any, bool)
 	Done(any)
-	StartRunner(any, *github.WorkflowJobEvent)
-	StopRunner(*github.WorkflowJobEvent)
+	StartRunner(any, *github.WorkflowJobEvent) error
+	StopRunner(*github.WorkflowJobEvent) error
 }
 
 var (

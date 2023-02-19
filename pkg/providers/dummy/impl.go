@@ -44,8 +44,10 @@ func (_ impl) Next() (any, bool) {
 
 func (_ impl) Done(slot any) {}
 
-func (_ impl) StopRunner(e *github.WorkflowJobEvent) {
+func (_ impl) StopRunner(e *github.WorkflowJobEvent) error {
+	return nil
 }
 
-func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) {
+func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) error {
+	return nil
 }

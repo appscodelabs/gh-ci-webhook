@@ -28,6 +28,7 @@ import (
 
 	"github.com/google/go-github/v50/github"
 	"github.com/linode/linodego"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"gomodules.xyz/pointer"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -61,7 +62,7 @@ func (_ impl) Next() (any, bool) {
 
 func (_ impl) Done(slot any) {}
 
-func (_ impl) StopRunner(e *github.WorkflowJobEvent) {
+func (_ impl) StopRunner(e *github.WorkflowJobEvent) error {
 	c := NewClient()
 
 	machineName := fmt.Sprintf("%s-%s-%d", e.Org.GetLogin(), e.Repo.GetName(), e.GetWorkflowJob().GetID())
@@ -74,24 +75,21 @@ func (_ impl) StopRunner(e *github.WorkflowJobEvent) {
 		panic(err)
 	}
 	if len(instances) > 1 {
-		klog.Errorf("multiple linodes found with label %v", machineName)
-		return
+		return fmt.Errorf("multiple linodes found with label %v", machineName)
 	} else if len(instances) == 0 {
-		klog.Errorf("no linode found with label %v", machineName)
-		return
+		return fmt.Errorf("no linode found with label %v", machineName)
 	}
 
 	id := instances[0].ID
 	err = c.DeleteInstance(context.Background(), id)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	fmt.Println("instance id:", id)
 
 	token, found := os.LookupEnv("GITHUB_TOKEN")
 	if !found {
-		klog.Fatalln("GITHUB_TOKEN env var is not set")
-		return
+		return errors.New("GITHUB_TOKEN env var is not set")
 	}
 
 	// github client
@@ -102,12 +100,13 @@ func (_ impl) StopRunner(e *github.WorkflowJobEvent) {
 	client := github.NewClient(tc)
 	err = providers.DeleteRunner(ctx, client, e.Repo, machineName)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	fmt.Println("deleted machine:", machineName)
+	return nil
 }
 
-func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) {
+func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) error {
 	c := NewClient()
 
 	machineName := fmt.Sprintf("%s-%s-%d", e.Org.GetLogin(), e.Repo.GetName(), e.GetWorkflowJob().GetID())
@@ -116,9 +115,10 @@ func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) {
 	// machineName := "gh-runner-" + passgen.Generate(6)
 	id, err := createInstance(c, machineName, fmt.Sprintf("%s/%s", e.Org.GetLogin(), e.Repo.GetName()))
 	if err != nil {
-		panic(err)
+		return err
 	}
 	fmt.Println("instance id:", id)
+	return nil
 }
 
 func NewClient() *linodego.Client {

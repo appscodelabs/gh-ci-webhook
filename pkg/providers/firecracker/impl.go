@@ -93,23 +93,23 @@ func (p impl) Done(slot any) {
 	p.ins.Free(ins.ID)
 }
 
-func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) {
+func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 	ins := slot.(*Instance)
 	if ins == nil {
-		return
+		return nil
 	}
 
 	wfRootFSPath := WorkflowRunRootFSPath(ins.UID)
 	wfDir := filepath.Dir(wfRootFSPath)
 	err := os.MkdirAll(wfDir, 0o755)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	// defer os.RemoveAll(wfDir) // remove in StopRunner
 
 	err = ioutil.CopyFile(wfRootFSPath, DefaultOptions.RootFSPath())
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Setup socket and snapshot + memory paths
@@ -120,15 +120,16 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) {
 	ins.cancel = cancel
 	err = createVM(ctx, ins, socketPath, e)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	SaveWF(ins.ID, e)
+	return nil
 }
 
-func (p impl) StopRunner(e *github.WorkflowJobEvent) {
+func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 	instanceID, ok := GetSlotForWF(e)
 	if !ok {
-		return
+		return nil
 	}
 	p.ins.Free(instanceID)
 
@@ -139,7 +140,7 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) {
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	runnerName := fmt.Sprintf("%s-%d", hostname, instanceID)
 
@@ -151,7 +152,8 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) {
 	client := github.NewClient(tc)
 	err = providers.DeleteRunner(ctx, client, e.Repo, runnerName)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	fmt.Println("deleted runner:", runnerName)
+	return nil
 }

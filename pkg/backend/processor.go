@@ -79,8 +79,7 @@ func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) error {
 		return err
 	}
 
-	mgr.p.StartRunner(slot, e.(*github.WorkflowJobEvent))
-	return nil
+	return mgr.p.StartRunner(slot, e.(*github.WorkflowJobEvent))
 }
 
 func (mgr *Manager) ProcessCompletedMsg(payload []byte) error {
@@ -94,6 +93,5 @@ func (mgr *Manager) ProcessCompletedMsg(payload []byte) error {
 		return err
 	}
 
-	mgr.p.StopRunner(e.(*github.WorkflowJobEvent))
-	return nil
+	return mgr.p.StopRunner(e.(*github.WorkflowJobEvent))
 }
