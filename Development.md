@@ -48,3 +48,26 @@ curl -L ${release_url}/download/${latest}/firecracker-${latest}-${arch}.tgz \
 | tar -xz
 mv release-${latest}-$(uname -m)/firecracker-${latest}-$(uname -m) firecracker
 ```
+
+## Test VMs
+
+```
+hostctl --machine-id=0 \
+--nats-addr=this-is-nats.appscode.ninja:4222 \
+--provider=firecracker \
+--firecracker.binary-path=/home/tamal/go/src/github.com/appscodelabs/gh-ci-webhook/fc/firecracker \
+--firecracker.os=focal \
+--firecracker.image-dir=/home/tamal/go/src/github.com/appscodelabs/gh-ci-webhook/fc/images
+
+hostctl --machine-id=0 \
+--nats-addr=this-is-nats.appscode.ninja:4222 \
+--provider=dummy
+
+firecracker create-vm \
+--firecracker.binary-path=/home/tamal/go/src/github.com/appscodelabs/gh-ci-webhook/fc/firecracker \
+--firecracker.os=focal \
+--firecracker.image-dir=/home/tamal/go/src/github.com/appscodelabs/gh-ci-webhook/fc/images
+
+sudo /home/tamal/go/bin/gh-ci-webhook firecracker create-tap --name=tap100
+ifconfig
+```
