@@ -18,6 +18,8 @@ package firecracker
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/google/go-github/v50/github"
@@ -32,6 +34,10 @@ type Instance struct {
 }
 
 func (i *Instance) Free() {
+	wfRootFSPath := WorkflowRunRootFSPath(i.UID)
+	wfDir := filepath.Dir(wfRootFSPath)
+	_ = os.RemoveAll(wfDir)
+
 	i.UID = ""
 	i.InUse = false
 	if i.cancel != nil {

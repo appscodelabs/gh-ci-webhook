@@ -105,7 +105,7 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) {
 	if err != nil {
 		panic(err)
 	}
-	defer os.RemoveAll(wfDir)
+	// defer os.RemoveAll(wfDir) // remove in StopRunner
 
 	err = ioutil.CopyFile(wfRootFSPath, DefaultOptions.RootFSPath())
 	if err != nil {
