@@ -51,3 +51,7 @@ func (_ impl) StopRunner(e *github.WorkflowJobEvent) error {
 func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) error {
 	return nil
 }
+
+func (_ impl) Status() ([]byte, error) {
+	return nil, nil
+}

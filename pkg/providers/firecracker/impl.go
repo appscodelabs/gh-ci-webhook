@@ -18,6 +18,7 @@ package firecracker
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -151,4 +152,8 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 	}
 	fmt.Println("deleted runner:", runnerName)
 	return nil
+}
+
+func (p impl) Status() ([]byte, error) {
+	return json.MarshalIndent(p.ins.slots, "", "  ")
 }

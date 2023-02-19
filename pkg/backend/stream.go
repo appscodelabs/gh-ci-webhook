@@ -45,7 +45,7 @@ type Manager struct {
 	name       string
 	numWorkers int
 
-	p api.Interface
+	Provider api.Interface
 }
 
 func New(nc *nats.Conn, opts Options) *Manager {
@@ -61,13 +61,13 @@ func New(nc *nats.Conn, opts Options) *Manager {
 		MachineID:  opts.MachineID,
 		name:       opts.Name,
 		numWorkers: opts.NumWorkers,
-		p:          p,
+		Provider:   p,
 	}
 }
 
 func (mgr *Manager) Start(ctx context.Context, jsmOpts ...nats.JSOpt) error {
-	if mgr.p != nil {
-		err := mgr.p.Init()
+	if mgr.Provider != nil {
+		err := mgr.Provider.Init()
 		if err != nil {
 			return errors.Wrap(err, "failed to init provider")
 		}
@@ -194,7 +194,7 @@ func (mgr *Manager) runQueuedWorker() {
 }
 
 func (mgr *Manager) processNextQueuedMsg() (err error) {
-	slot, found := mgr.p.Next()
+	slot, found := mgr.Provider.Next()
 	if !found {
 		return errors.New("Instance not available")
 	}
@@ -203,7 +203,7 @@ func (mgr *Manager) processNextQueuedMsg() (err error) {
 	msgs, err = mgr.subsQueued.Fetch(1, nats.MaxWait(NatsRequestTimeout))
 	if err != nil || len(msgs) == 0 {
 		// no more msg to process
-		mgr.p.Done(slot)
+		mgr.Provider.Done(slot)
 		err = errors.Wrap(err, "failed to fetch msg")
 		return err
 	}

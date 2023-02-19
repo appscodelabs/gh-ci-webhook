@@ -62,6 +62,10 @@ func (_ impl) Next() (any, bool) {
 
 func (_ impl) Done(slot any) {}
 
+func (_ impl) Status() ([]byte, error) {
+	return nil, nil
+}
+
 func (_ impl) StopRunner(e *github.WorkflowJobEvent) error {
 	c := NewClient()
 

@@ -18,19 +18,25 @@ package cmds
 
 import (
 	"context"
+	"net/http"
 	"os"
 
 	"github.com/appscodelabs/gh-ci-webhook/pkg/backend"
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/firecracker"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/linode"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 )
 
 func NewCmdHostctl(ctx context.Context) *cobra.Command {
 	var (
 		ghToken = os.Getenv("GITHUB_TOKEN")
+		addr    = ":8080"
 
 		opts   = backend.DefaultOptions()
 		ncOpts = backend.NewNATSOptions()
@@ -56,16 +62,40 @@ func NewCmdHostctl(ctx context.Context) *cobra.Command {
 				return err
 			}
 
+			go runStatusServer(addr, mgr.Provider)
+
 			<-ctx.Done()
 			return nil
 		},
 	}
 
 	cmd.Flags().StringVar(&ghToken, "github-token", ghToken, "GitHub Token")
+	cmd.Flags().StringVar(&addr, "status-server-addr", addr, "host:port of the status server")
 	linode.DefaultOptions.AddFlags(cmd.Flags())
 	firecracker.DefaultOptions.AddFlags(cmd.Flags())
 	opts.AddFlags(cmd.Flags())
 	ncOpts.AddFlags(cmd.Flags())
 
 	return cmd
+}
+
+func runStatusServer(addr string, p api.Interface) {
+	r := chi.NewRouter()
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Get("/firecracker/status", func(w http.ResponseWriter, r *http.Request) {
+		if p != nil {
+			data, err := p.Status()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			} else {
+				_, _ = w.Write(data)
+			}
+		}
+	})
+	klog.Infoln("starting status server", addr)
+	if err := http.ListenAndServe(addr, r); err != nil {
+		klog.Errorln(err)
+	}
 }

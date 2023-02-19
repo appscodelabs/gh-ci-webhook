@@ -30,6 +30,7 @@ type Interface interface {
 	Done(any)
 	StartRunner(any, *github.WorkflowJobEvent) error
 	StopRunner(*github.WorkflowJobEvent) error
+	Status() ([]byte, error)
 }
 
 var (
