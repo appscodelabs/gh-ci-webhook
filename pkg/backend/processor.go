@@ -24,9 +24,10 @@ import (
 	"github.com/google/go-github/v50/github"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
+	"github.com/zeebo/xxh3"
 )
 
-func SubmitPayload(nc *nats.Conn, stream string, r *http.Request, secretToken []byte) error {
+func SubmitPayload(nc *nats.Conn, stream string, numMachines uint64, r *http.Request, secretToken []byte) error {
 	eventType := github.WebHookType(r)
 	payload, err := github.ValidatePayload(r, secretToken)
 	if err != nil {
@@ -41,12 +42,16 @@ func SubmitPayload(nc *nats.Conn, stream string, r *http.Request, secretToken []
 	case *github.WorkflowJobEvent:
 		// https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#about-autoscaling
 		// BUG: https://github.com/nats-io/natscli/issues/703
-		subj := fmt.Sprintf("%s.runs.%s.%d-%s-%d",
-			stream,
-			event.WorkflowJob.GetStatus(),
+
+		h := xxh3.New()
+		_, _ = h.WriteString(fmt.Sprintf("%d-%s-%d",
 			event.GetWorkflowJob().GetRunID(),
 			event.GetWorkflowJob().GetName(),
-			event.GetWorkflowJob().GetRunAttempt(),
+			event.GetWorkflowJob().GetRunAttempt()))
+		subj := fmt.Sprintf("%s.machines.%s.%d",
+			stream,
+			event.WorkflowJob.GetStatus(),
+			h.Sum64()%numMachines,
 		)
 
 		var buf bytes.Buffer

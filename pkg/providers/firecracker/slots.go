@@ -17,20 +17,27 @@ limitations under the License.
 package firecracker
 
 import (
+	"fmt"
 	"sync"
 
+	"github.com/google/go-github/v50/github"
 	passgen "gomodules.xyz/password-generator"
 )
 
 type Instance struct {
-	ID    int
-	UID   string
-	InUse bool
+	ID     int
+	UID    string
+	InUse  bool
+	cancel func()
 }
 
 func (i *Instance) Free() {
 	i.UID = ""
 	i.InUse = false
+	if i.cancel != nil {
+		i.cancel()
+		i.cancel = nil
+	}
 }
 
 type Instances struct {
@@ -69,4 +76,30 @@ func (i *Instances) Free(id int) {
 	if i.slots[id].InUse {
 		i.slots[id].Free()
 	}
+}
+
+var (
+	wfToInstanceID = map[string]int{}
+	muWF           sync.Mutex
+)
+
+func SaveWF(id int, e *github.WorkflowJobEvent) {
+	key := fmt.Sprintf("%d-%s-%d",
+		e.GetWorkflowJob().GetRunID(),
+		e.GetWorkflowJob().GetName(),
+		e.GetWorkflowJob().GetRunAttempt())
+	muWF.Lock()
+	defer muWF.Unlock()
+	wfToInstanceID[key] = id
+}
+
+func GetSlotForWF(e *github.WorkflowJobEvent) (int, bool) {
+	key := fmt.Sprintf("%d-%s-%d",
+		e.GetWorkflowJob().GetRunID(),
+		e.GetWorkflowJob().GetName(),
+		e.GetWorkflowJob().GetRunAttempt())
+	muWF.Lock()
+	defer muWF.Unlock()
+	id, ok := wfToInstanceID[key]
+	return id, ok
 }

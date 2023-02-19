@@ -22,10 +22,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
 	"github.com/google/go-github/v50/github"
 	"github.com/pkg/errors"
+	"golang.org/x/oauth2"
 	"golang.org/x/sys/unix"
 	"gomodules.xyz/x/ioutil"
 )
@@ -114,14 +116,37 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) {
 	socketPath := filepath.Join(wfDir, fmt.Sprintf("fc-%d", ins.ID))
 	fmt.Println("SOCKET_PATH:___", socketPath)
 
-	ctx := context.Background()
-	ipToRestore := createSnapshotSSH(ctx, ins, socketPath)
-	fmt.Println(ipToRestore)
+	ctx, cancel := context.WithCancel(context.Background())
+	ins.cancel = cancel
+	err = createVM(ctx, ins, socketPath, e)
+	if err != nil {
+		panic(err)
+	}
+	SaveWF(ins.ID, e)
 }
 
 func (p impl) StopRunner(e *github.WorkflowJobEvent) {
-	//ins := slot.(*Instance)
-	//if ins == nil {
-	//	return
-	//}
+	instanceID, ok := GetSlotForWF(e)
+	if !ok {
+		return
+	}
+	p.ins.Free(instanceID)
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		panic(err)
+	}
+	runnerName := fmt.Sprintf("%s-%d", hostname, instanceID)
+
+	// github client
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: DefaultOptions.GitHubToken})
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+	err = providers.DeleteRunner(ctx, client, e.Repo, runnerName)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("deleted runner:", runnerName)
 }

@@ -3,12 +3,12 @@ module github.com/appscodelabs/gh-ci-webhook
 go 1.18
 
 require (
-	github.com/containernetworking/cni v1.0.1
 	github.com/coreos/go-iptables v0.6.0
 	github.com/firecracker-microvm/firecracker-go-sdk v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/google/go-containerregistry v0.12.1
 	github.com/google/go-github/v50 v50.0.0
+	github.com/klauspost/cpuid/v2 v2.2.3
 	github.com/linode/linodego v1.14.1
 	github.com/nats-io/nats.go v1.23.0
 	github.com/pkg/errors v0.9.1
@@ -16,13 +16,13 @@ require (
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/pflag v1.0.5
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230206183746-70ca0345eede
+	github.com/zeebo/xxh3 v1.0.2
 	gocloud.dev v0.28.0
 	golang.org/x/crypto v0.5.0
 	golang.org/x/oauth2 v0.2.0
 	golang.org/x/sys v0.4.0
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.6
-	gomodules.xyz/oneliners v0.0.1
 	gomodules.xyz/password-generator v0.2.9
 	gomodules.xyz/pointer v0.1.0
 	gomodules.xyz/signals v0.2.0
@@ -41,6 +41,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0 // indirect
 	github.com/containerd/fifo v1.0.0 // indirect
+	github.com/containernetworking/cni v1.0.1 // indirect
 	github.com/containernetworking/plugins v1.1.1 // indirect
 	github.com/docker/cli v20.10.20+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect

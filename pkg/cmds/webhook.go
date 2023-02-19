@@ -48,9 +48,10 @@ var (
 
 func NewCmdRun(ctx context.Context) *cobra.Command {
 	var (
-		ncOpts = backend.NewNATSOptions()
-		nc     *nats.Conn
-		stream = backend.StreamName
+		ncOpts      = backend.NewNATSOptions()
+		nc          *nats.Conn
+		stream             = backend.StreamName
+		numMachines uint64 = 1
 	)
 	cmd := &cobra.Command{
 		Use:               "run",
@@ -65,6 +66,7 @@ func NewCmdRun(ctx context.Context) *cobra.Command {
 			defer nc.Drain() //nolint:errcheck
 
 			opts := backend.DefaultOptions()
+			opts.Stream = stream
 			mgr := backend.New(nc, opts)
 			if _, err = mgr.EnsureStream(); err != nil {
 				return err
@@ -75,7 +77,7 @@ func NewCmdRun(ctx context.Context) *cobra.Command {
 				fmt.Printf("using secret token %s\n", secretToken)
 			}
 
-			return runServer(nc, stream)
+			return runServer(nc, stream, numMachines)
 		},
 	}
 
@@ -87,6 +89,7 @@ func NewCmdRun(ctx context.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&enableSSL, "ssl", enableSSL, "Set true to enable SSL via Let's Encrypt")
 	cmd.Flags().IntVar(&queueLength, "queue-length", queueLength, "Length of queue used to hold pr events")
 	cmd.Flags().StringVar(&stream, "stream", stream, "Name of Jetstream")
+	cmd.Flags().Uint64Var(&numMachines, "num-machines", numMachines, "Number of machines")
 
 	ncOpts.AddFlags(cmd.Flags())
 
@@ -103,7 +106,7 @@ type Response struct {
 	TLS     *tls.ConnectionState `json:"tls,omitempty"`
 }
 
-func runServer(nc *nats.Conn, stream string) error {
+func runServer(nc *nats.Conn, stream string, numMachines uint64) error {
 	sh := shell.NewSession()
 	sh.ShowCMD = true
 	sh.PipeFail = true
@@ -127,7 +130,7 @@ func runServer(nc *nats.Conn, stream string) error {
 		_ = enc.Encode(resp)
 	})
 	r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
-		err := backend.SubmitPayload(nc, stream, r, []byte(secretToken))
+		err := backend.SubmitPayload(nc, stream, numMachines, r, []byte(secretToken))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

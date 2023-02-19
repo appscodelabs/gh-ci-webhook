@@ -14,23 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package registry
 
 import (
-	"os"
-
-	"github.com/appscodelabs/gh-ci-webhook/pkg/cmds"
-	_ "github.com/appscodelabs/gh-ci-webhook/pkg/providers/registry"
-
-	"gomodules.xyz/logs"
+	_ "github.com/appscodelabs/gh-ci-webhook/pkg/providers/dummy"
+	_ "github.com/appscodelabs/gh-ci-webhook/pkg/providers/firecracker"
+	_ "github.com/appscodelabs/gh-ci-webhook/pkg/providers/linode"
 )
-
-func main() {
-	logs.InitLogs()
-	defer logs.FlushLogs()
-
-	if err := cmds.NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
-	os.Exit(0)
-}
