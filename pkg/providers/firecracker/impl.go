@@ -132,6 +132,11 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) {
 	}
 	p.ins.Free(instanceID)
 
+	tap0 := fmt.Sprintf("fc%d", instanceID*4+1)
+	tap1 := fmt.Sprintf("fc%d", instanceID*4+2)
+	_ = TapDelete(tap0)
+	_ = TapDelete(tap1)
+
 	hostname, err := os.Hostname()
 	if err != nil {
 		panic(err)

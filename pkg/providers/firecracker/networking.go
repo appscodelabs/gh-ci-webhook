@@ -149,6 +149,22 @@ func CreateTap(name, cidr string) (netlink.Link, error) {
 	return tapLink, nil
 }
 
+func TapExists(name string) bool {
+	l, err := netlink.LinkByName(name)
+	return l != nil && err == nil
+}
+
+func TapDelete(name string) error {
+	if l, err := netlink.LinkByName(name); err == nil {
+		return netlink.LinkDel(l)
+	} else {
+		if _, ok := err.(netlink.LinkNotFoundError); !ok {
+			return err
+		}
+	}
+	return nil
+}
+
 const hexDigit = "0123456789abcdef"
 
 func MacAddr(b []byte) string {

@@ -91,14 +91,18 @@ func createVM(ctx context.Context, ins *Instance, socketPath string, e *github.W
 	eth1Mac := MacAddr(net.ParseIP(ip1).To4())
 	fmt.Println("instanceID:", ins.ID, "IP:", ip1)
 
-	tap0 := fmt.Sprintf("tap%d", ins.ID*4+1)
-	tap1 := fmt.Sprintf("tap%d", ins.ID*4+2)
+	tap0 := fmt.Sprintf("fc%d", ins.ID*4+1)
+	tap1 := fmt.Sprintf("fc%d", ins.ID*4+2)
 
-	if _, err := CreateTap(tap0, ""); err != nil {
-		return err
+	if !TapExists(tap0) {
+		if _, err := CreateTap(tap0, ""); err != nil {
+			return err
+		}
 	}
-	if _, err := CreateTap(tap1, fmt.Sprintf("%s/%d", ip0, VMS_NETWORK_SUBNET)); err != nil {
-		return err
+	if !TapExists(tap1) {
+		if _, err := CreateTap(tap1, fmt.Sprintf("%s/%d", ip0, VMS_NETWORK_SUBNET)); err != nil {
+			return err
+		}
 	}
 	if err = SetupIPTables(egressIface, tap1); err != nil {
 		return err
