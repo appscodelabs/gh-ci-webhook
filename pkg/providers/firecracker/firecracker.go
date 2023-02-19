@@ -207,11 +207,12 @@ func createVM(ctx context.Context, ins *Instance, socketPath string, e *github.W
 		m.Handlers.FcInit = m.Handlers.FcInit.Swappend(sdk.NewSetMetadataHandler(mmds))
 	}
 
+	if err := m.Start(ctx); err != nil {
+		return err
+	}
+	SaveWF(ins.ID, e)
+
 	go func() {
-		if err := m.Start(ctx); err != nil {
-			log.Errorln(err)
-			return
-		}
 		defer func() {
 			if err := m.StopVMM(); err != nil {
 				log.Errorln(err)

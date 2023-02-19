@@ -48,9 +48,7 @@ func NewCmdFirecrackerCreateVM() *cobra.Command {
 				UID:   passgen.GenerateForCharset(6, passgen.AlphaNum),
 				InUse: false,
 			}
-			p.StartRunner(slot, nil)
-
-			return nil
+			return p.StartRunner(slot, nil)
 		},
 	}
 	cmd.Flags().StringVar(&ghToken, "github-token", ghToken, "GitHub Token")

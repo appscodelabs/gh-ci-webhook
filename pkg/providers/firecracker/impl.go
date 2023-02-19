@@ -118,12 +118,7 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	ins.cancel = cancel
-	err = createVM(ctx, ins, socketPath, e)
-	if err != nil {
-		return err
-	}
-	SaveWF(ins.ID, e)
-	return nil
+	return createVM(ctx, ins, socketPath, e)
 }
 
 func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
