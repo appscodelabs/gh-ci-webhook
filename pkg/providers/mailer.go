@@ -58,12 +58,12 @@ func SendMail(mt MailType, id int, status []byte, e *github.WorkflowJobEvent) er
 	buf.WriteString("**Status:**\n")
 	buf.WriteString("```\n")
 	buf.Write(status)
-	buf.WriteString("```\n")
+	buf.WriteString("\n```\n")
 	buf.WriteString("**Event:**\n")
 	buf.WriteString("```\n")
 	ed, _ := json.MarshalIndent(e, "", "  ")
 	buf.Write(ed)
-	buf.WriteString("```\n")
+	buf.WriteString("\n```\n")
 
 	mm := mailer.Mailer{
 		Sender:          "tamal+gh-ci-hosttl@appscode.com",
