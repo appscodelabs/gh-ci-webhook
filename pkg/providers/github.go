@@ -30,11 +30,13 @@ const (
 	skew = 10 * time.Second
 )
 
-func EventKey(event *github.WorkflowJobEvent) string {
-	return fmt.Sprintf("%d-%s-%d",
-		event.GetWorkflowJob().GetRunID(),
-		event.GetWorkflowJob().GetName(),
-		event.GetWorkflowJob().GetRunAttempt())
+func EventKey(e *github.WorkflowJobEvent) string {
+	return fmt.Sprintf("%s-%s-%d-%s-%d",
+		e.GetRepo().GetOwner().GetLogin(),
+		e.GetRepo().GetName(),
+		e.GetWorkflowJob().GetRunID(),
+		e.GetWorkflowJob().GetName(),
+		e.GetWorkflowJob().GetRunAttempt())
 }
 
 func ListRunners(ctx context.Context, client *github.Client, repo *github.Repository) ([]*github.Runner, error) {
