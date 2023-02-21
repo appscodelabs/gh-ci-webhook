@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
+
 	"github.com/google/go-github/v50/github"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
@@ -44,10 +46,7 @@ func SubmitPayload(nc *nats.Conn, stream string, numMachines uint64, r *http.Req
 		// BUG: https://github.com/nats-io/natscli/issues/703
 
 		h := xxh3.New()
-		_, _ = h.WriteString(fmt.Sprintf("%d-%s-%d",
-			event.GetWorkflowJob().GetRunID(),
-			event.GetWorkflowJob().GetName(),
-			event.GetWorkflowJob().GetRunAttempt()))
+		_, _ = h.WriteString(providers.EventKey(event))
 		subj := fmt.Sprintf("%s.machines.%s.%d",
 			stream,
 			event.WorkflowJob.GetStatus(),
@@ -68,30 +67,32 @@ func SubmitPayload(nc *nats.Conn, stream string, numMachines uint64, r *http.Req
 	}
 }
 
-func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) error {
+func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) (*github.WorkflowJobEvent, error) {
 	eventType, payload, found := bytes.Cut(payload, []byte(":"))
 	if !found {
-		return errors.New("invalid payload format")
+		return nil, errors.New("invalid payload format")
 	}
 
-	e, err := github.ParseWebHook(string(eventType), payload)
+	event, err := github.ParseWebHook(string(eventType), payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	e := event.(*github.WorkflowJobEvent)
 
-	return mgr.Provider.StartRunner(slot, e.(*github.WorkflowJobEvent))
+	return e, mgr.Provider.StartRunner(slot, e)
 }
 
-func (mgr *Manager) ProcessCompletedMsg(payload []byte) error {
+func (mgr *Manager) ProcessCompletedMsg(payload []byte) (*github.WorkflowJobEvent, error) {
 	eventType, payload, found := bytes.Cut(payload, []byte(":"))
 	if !found {
-		return errors.New("invalid payload format")
+		return nil, errors.New("invalid payload format")
 	}
 
-	e, err := github.ParseWebHook(string(eventType), payload)
+	event, err := github.ParseWebHook(string(eventType), payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	e := event.(*github.WorkflowJobEvent)
 
-	return mgr.Provider.StopRunner(e.(*github.WorkflowJobEvent))
+	return e, mgr.Provider.StopRunner(e)
 }

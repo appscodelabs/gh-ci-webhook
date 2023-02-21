@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
 	"github.com/nats-io/nats.go"
@@ -208,13 +209,14 @@ func (mgr *Manager) processNextQueuedMsg() (err error) {
 		return err
 	}
 
-	if e2 := mgr.ProcessQueuedMsg(slot, msgs[0].Data); e2 != nil {
-		err = errors.Wrap(e2, "failed to process payload")
+	event, e2 := mgr.ProcessQueuedMsg(slot, msgs[0].Data)
+	if e2 != nil {
+		err = errors.Wrapf(e2, "failed to process payload for event %s", providers.EventKey(event))
 	}
 
 	// report failure ?
-	if e2 := msgs[0].Ack(); e2 != nil {
-		klog.ErrorS(e2, "failed ACK msg")
+	if e3 := msgs[0].Ack(); e3 != nil {
+		klog.ErrorS(e3, "failed ACK msg", "event", providers.EventKey(event))
 	}
 	return err
 }
@@ -241,13 +243,14 @@ func (mgr *Manager) processNextCompletedMsg() (err error) {
 		return err
 	}
 
-	if e2 := mgr.ProcessCompletedMsg(msgs[0].Data); e2 != nil {
-		err = errors.Wrap(e2, "failed to process payload")
+	event, e2 := mgr.ProcessCompletedMsg(msgs[0].Data)
+	if e2 != nil {
+		err = errors.Wrapf(e2, "failed to process payload for event %s", providers.EventKey(event))
 	}
 
 	// report failure ?
-	if e2 := msgs[0].Ack(); e2 != nil {
-		klog.ErrorS(e2, "failed ACK msg")
+	if e3 := msgs[0].Ack(); e3 != nil {
+		klog.ErrorS(e3, "failed ACK msg", "event", providers.EventKey(event))
 	}
 	return err
 }

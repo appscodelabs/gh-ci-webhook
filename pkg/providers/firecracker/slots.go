@@ -17,10 +17,11 @@ limitations under the License.
 package firecracker
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 
 	"github.com/google/go-github/v50/github"
 	passgen "gomodules.xyz/password-generator"
@@ -90,22 +91,14 @@ var (
 )
 
 func SaveWF(id int, e *github.WorkflowJobEvent) {
-	key := fmt.Sprintf("%d-%s-%d",
-		e.GetWorkflowJob().GetRunID(),
-		e.GetWorkflowJob().GetName(),
-		e.GetWorkflowJob().GetRunAttempt())
 	muWF.Lock()
 	defer muWF.Unlock()
-	wfToInstanceID[key] = id
+	wfToInstanceID[providers.EventKey(e)] = id
 }
 
 func GetSlotForWF(e *github.WorkflowJobEvent) (int, bool) {
-	key := fmt.Sprintf("%d-%s-%d",
-		e.GetWorkflowJob().GetRunID(),
-		e.GetWorkflowJob().GetName(),
-		e.GetWorkflowJob().GetRunAttempt())
 	muWF.Lock()
 	defer muWF.Unlock()
-	id, ok := wfToInstanceID[key]
+	id, ok := wfToInstanceID[providers.EventKey(e)]
 	return id, ok
 }
