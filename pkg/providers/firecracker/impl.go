@@ -31,6 +31,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/sys/unix"
 	"gomodules.xyz/x/ioutil"
+	"k8s.io/klog/v2"
 )
 
 type impl struct {
@@ -111,6 +112,7 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 	}
 	// defer os.RemoveAll(wfDir) // remove in StopRunner
 
+	klog.InfoS("copying rootfs", "path", wfRootFSPath)
 	err = ioutil.CopyFile(wfRootFSPath, DefaultOptions.RootFSPath())
 	if err != nil {
 		return err
