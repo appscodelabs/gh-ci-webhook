@@ -18,6 +18,7 @@ package providers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -28,6 +29,13 @@ import (
 const (
 	skew = 10 * time.Second
 )
+
+func EventKey(event *github.WorkflowJobEvent) string {
+	return fmt.Sprintf("%d-%s-%d",
+		event.GetWorkflowJob().GetRunID(),
+		event.GetWorkflowJob().GetName(),
+		event.GetWorkflowJob().GetRunAttempt())
+}
 
 func ListRunners(ctx context.Context, client *github.Client, repo *github.Repository) ([]*github.Runner, error) {
 	opt := &github.ListOptions{
