@@ -19,6 +19,8 @@ import (
 	"net"
 	"os"
 
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
+
 	sdk "github.com/firecracker-microvm/firecracker-go-sdk"
 	"github.com/firecracker-microvm/firecracker-go-sdk/client/models"
 	"github.com/google/go-github/v50/github"
@@ -77,7 +79,7 @@ func createNewConfig(ins *Instance, socketPath string, opts ...configOpt) sdk.Co
 	return cfg
 }
 
-func createVM(ctx context.Context, ins *Instance, socketPath string, e *github.WorkflowJobEvent) error {
+func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e *github.WorkflowJobEvent) error {
 	egressIface, err := GetEgressInterface()
 	if err != nil {
 		return err
@@ -225,6 +227,9 @@ func createVM(ctx context.Context, ins *Instance, socketPath string, e *github.W
 				return
 			}
 		}()
+
+		sts, _ := p.Status()
+		_ = providers.SendMail(providers.Started, ins.ID, sts, e)
 
 		// wait for the VMM to exit
 		if err := m.Wait(ctx); err != nil {

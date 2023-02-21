@@ -100,6 +100,9 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 		return nil
 	}
 
+	sts, _ := p.Status()
+	_ = providers.SendMail(providers.Starting, ins.ID, sts, e)
+
 	wfRootFSPath := WorkflowRunRootFSPath(ins.UID)
 	wfDir := filepath.Dir(wfRootFSPath)
 	err := os.MkdirAll(wfDir, 0o755)
@@ -119,7 +122,7 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	ins.cancel = cancel
-	return createVM(ctx, ins, socketPath, e)
+	return p.createVM(ctx, ins, socketPath, e)
 }
 
 func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
@@ -127,6 +130,10 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 	if !ok {
 		return nil
 	}
+
+	sts, _ := p.Status()
+	_ = providers.SendMail(providers.Shutting, instanceID, sts, e)
+
 	p.ins.Free(instanceID)
 
 	tap0 := fmt.Sprintf("fc%d", instanceID*4+1)
@@ -151,6 +158,10 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 		return err
 	}
 	fmt.Println("deleted runner:", runnerName)
+
+	sts2, _ := p.Status()
+	_ = providers.SendMail(providers.Shut, instanceID, sts2, e)
+
 	return nil
 }
 
