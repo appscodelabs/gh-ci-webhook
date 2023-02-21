@@ -17,18 +17,22 @@ limitations under the License.
 package cmds
 
 import (
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/firecracker"
+
 	"github.com/spf13/cobra"
 )
 
-func NewCmdFirecracker() *cobra.Command {
+func NewCmdFirecrackerDeleteTAPDevice() *cobra.Command {
+	var device string
 	cmd := &cobra.Command{
-		Use:               "firecracker",
-		Short:             "Firecracker sub commands",
+		Use:               "delete-tap",
+		Short:             "Firecracker delete TAP device",
 		DisableAutoGenTag: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return firecracker.TapDelete(device)
+		},
 	}
-	cmd.AddCommand(NewCmdFirecrackerCreateVM())
-	cmd.AddCommand(NewCmdFirecrackerCreateTAPDevice())
-	cmd.AddCommand(NewCmdFirecrackerDeleteTAPDevice())
+	cmd.Flags().StringVar(&device, "name", device, "Name of TAP device (eg, tap1)")
 
 	return cmd
 }
