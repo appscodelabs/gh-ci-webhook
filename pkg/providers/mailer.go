@@ -65,8 +65,9 @@ func SendMail(mt MailType, id int, status []byte, e *github.WorkflowJobEvent) er
 	buf.Write(ed)
 	buf.WriteString("\n```\n")
 
+	const email = "tamal+gh-ci-hostctl@appscode.com"
 	mm := mailer.Mailer{
-		Sender:          "tamal+gh-ci-hosttl@appscode.com",
+		Sender:          email,
 		BCC:             "",
 		ReplyTo:         "",
 		Subject:         sub,
@@ -79,5 +80,5 @@ func SendMail(mt MailType, id int, status []byte, e *github.WorkflowJobEvent) er
 	if err != nil {
 		return err
 	}
-	return mm.SendMail(mg, "tamal+gh-ci-hosttl@appscode.com", "", nil)
+	return mm.SendMail(mg, email, "", nil)
 }
