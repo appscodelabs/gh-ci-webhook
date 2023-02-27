@@ -132,14 +132,15 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 	if !ok {
 		return nil
 	}
+	instanceUID := p.ins.slots[instanceID].UID
 
 	sts, _ := p.Status()
 	_ = providers.SendMail(providers.Shutting, instanceID, sts, e)
 
 	p.ins.Free(instanceID)
 
-	tap0 := fmt.Sprintf("fc%d", instanceID*4+1)
-	tap1 := fmt.Sprintf("fc%d", instanceID*4+2)
+	tap0 := fmt.Sprintf("fc%d", instanceID*4+1) + instanceUID
+	tap1 := fmt.Sprintf("fc%d", instanceID*4+2) + instanceUID
 	_ = TapDelete(tap0)
 	_ = TapDelete(tap1)
 

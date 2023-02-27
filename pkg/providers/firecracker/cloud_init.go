@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func BuildNetCfg(eth0Mac, eth1Mac, ip0, ip1 string) (string, error) {
+func BuildNetCfg(uid, eth0Mac, eth1Mac, ip0, ip1 string) (string, error) {
 	/*
 		version: 2
 		ethernets:
@@ -66,7 +66,7 @@ func BuildNetCfg(eth0Mac, eth1Mac, ip0, ip1 string) (string, error) {
 		Version:  2,
 		Renderer: "networkd",
 		Ethernets: map[string]EthernetConfig{
-			"eth0": {
+			"eth0" + uid: {
 				Match: EthernetMatcher{
 					Macaddress: eth0Mac,
 				},
@@ -77,7 +77,7 @@ func BuildNetCfg(eth0Mac, eth1Mac, ip0, ip1 string) (string, error) {
 				Gateway4:    "",
 				Nameservers: nil,
 			},
-			"eth1": {
+			"eth1" + uid: {
 				Match: EthernetMatcher{
 					Macaddress: eth1Mac, // __MAC_OCTET__
 				},

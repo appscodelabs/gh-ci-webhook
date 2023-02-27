@@ -93,8 +93,8 @@ func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e 
 	eth1Mac := MacAddr(net.ParseIP(ip1).To4())
 	fmt.Println("instanceID:", ins.ID, "IP:", ip1)
 
-	tap0 := fmt.Sprintf("fc%d", ins.ID*4+1)
-	tap1 := fmt.Sprintf("fc%d", ins.ID*4+2)
+	tap0 := fmt.Sprintf("fc%d", ins.ID*4+1) + ins.UID
+	tap1 := fmt.Sprintf("fc%d", ins.ID*4+2) + ins.UID
 
 	if !TapExists(tap0) {
 		if _, err := CreateTap(tap0, ""); err != nil {
@@ -118,7 +118,7 @@ func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e 
 				IPAddr:      net.IPNet{IP: net.ParseIP(MMDS_IP), Mask: net.CIDRMask(MMDS_SUBNET, 8*net.IPv4len)},
 				Gateway:     nil,
 				Nameservers: nil,
-				IfName:      "eth0",
+				IfName:      "eth0" + ins.UID,
 			},
 		},
 		AllowMMDS: true,
@@ -131,7 +131,7 @@ func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e 
 				IPAddr:      net.IPNet{IP: net.ParseIP(ip1), Mask: net.CIDRMask(VMS_NETWORK_SUBNET, 8*net.IPv4len)},
 				Gateway:     net.ParseIP(ip0),
 				Nameservers: []string{"1.1.1.1", "8.8.8.8"},
-				IfName:      "eth1",
+				IfName:      "eth1" + ins.UID,
 			},
 		},
 	}
@@ -180,7 +180,7 @@ func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e 
 				ds := fmt.Sprintf("nocloud-net;s=http://%s/latest/", MMDS_IP)
 				kernelArgs["ds"] = &ds
 
-				netcfg, err := BuildNetCfg(eth0Mac, eth1Mac, ip0, ip1)
+				netcfg, err := BuildNetCfg(ins.UID, eth0Mac, eth1Mac, ip0, ip1)
 				if err != nil {
 					return err
 				}
