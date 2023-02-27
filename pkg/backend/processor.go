@@ -27,6 +27,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"github.com/zeebo/xxh3"
+	"gomodules.xyz/sets"
 )
 
 func SubmitPayload(nc *nats.Conn, stream string, numMachines uint64, r *http.Request, secretToken []byte) error {
@@ -44,6 +45,10 @@ func SubmitPayload(nc *nats.Conn, stream string, numMachines uint64, r *http.Req
 	case *github.WorkflowJobEvent:
 		// https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#about-autoscaling
 		// BUG: https://github.com/nats-io/natscli/issues/703
+
+		if !sets.NewString(event.GetWorkflowJob().Labels...).Has("self-hosted") {
+			return nil
+		}
 
 		h := xxh3.New()
 		_, _ = h.WriteString(providers.EventKey(event))
@@ -79,7 +84,10 @@ func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) (*github.Workflow
 	}
 	e := event.(*github.WorkflowJobEvent)
 
-	return e, mgr.Provider.StartRunner(slot, e)
+	if sets.NewString(e.GetWorkflowJob().Labels...).Has("self-hosted") {
+		return e, mgr.Provider.StartRunner(slot, e)
+	}
+	return e, nil
 }
 
 func (mgr *Manager) ProcessCompletedMsg(payload []byte) (*github.WorkflowJobEvent, error) {
@@ -94,5 +102,8 @@ func (mgr *Manager) ProcessCompletedMsg(payload []byte) (*github.WorkflowJobEven
 	}
 	e := event.(*github.WorkflowJobEvent)
 
-	return e, mgr.Provider.StopRunner(e)
+	if sets.NewString(e.GetWorkflowJob().Labels...).Has("self-hosted") {
+		return e, mgr.Provider.StopRunner(e)
+	}
+	return e, nil
 }

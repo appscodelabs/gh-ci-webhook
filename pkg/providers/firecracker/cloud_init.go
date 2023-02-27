@@ -228,7 +228,8 @@ export RUNNER_NAME=%s
 
 # https://github.com/actions/runner/blob/main/docs/automate.md
 # https://github.com/actions/actions-runner-controller/issues/84#issuecomment-756971038
-curl -s https://raw.githubusercontent.com/actions/runner/main/scripts/create-latest-svc.sh | bash -s -- -s ${RUNNER_OWNER} -n ${RUNNER_NAME} -l ubuntu-latest,ubuntu-20.04 -f
+# -l ubuntu-latest,ubuntu-20.04
+curl -s https://raw.githubusercontent.com/actions/runner/main/scripts/create-latest-svc.sh | bash -s -- -s ${RUNNER_OWNER} -n ${RUNNER_NAME} -f
 `, ghOrg, ghToken, runnerName)
 
 	udBytes, err := PrepareCloudInitUserData(userData, script)
