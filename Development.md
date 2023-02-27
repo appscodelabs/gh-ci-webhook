@@ -31,11 +31,11 @@ systemctl restart gh-ci-hostctl
 script gist: https://gist.github.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7
 
 ```
-curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/c1b3647e43a28d17d24cbcb2db2063d61bebf455/build_rootfs.sh | bash -s -- bionic 25G
+curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- bionic 20G
 
-curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/c1b3647e43a28d17d24cbcb2db2063d61bebf455/build_rootfs.sh | bash -s -- focal 25G
+curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- focal 20G
 
-curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/c1b3647e43a28d17d24cbcb2db2063d61bebf455/build_rootfs.sh | bash -s -- jammy 25G
+curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- jammy 20G
 ```
 
 ## Download firecracker binary

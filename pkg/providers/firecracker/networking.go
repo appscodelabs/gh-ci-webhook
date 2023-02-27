@@ -60,7 +60,7 @@ func SetupIPTables(iface, tapDev string) error {
 	}
 	err = tbl.AppendUnique("nat", "POSTROUTING", "-o", iface, "-j", "MASQUERADE")
 	if err != nil {
-		return errors.Wrap(err, "failed to exec: "+"iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE")
+		return errors.Wrap(err, "failed to exec: "+"iptables -t nat -A POSTROUTING -o "+iface+" -j MASQUERADE")
 	}
 
 	/*
