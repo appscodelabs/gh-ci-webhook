@@ -96,16 +96,24 @@ func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e 
 	tap0 := fmt.Sprintf("fc%d", ins.ID*4+1)
 	tap1 := fmt.Sprintf("fc%d", ins.ID*4+2)
 
-	if !TapExists(tap0) {
-		if _, err := CreateTap(tap0, ""); err != nil {
+	if TapExists(tap0) {
+		if err := TapDelete(tap0); err != nil {
 			return err
 		}
 	}
-	if !TapExists(tap1) {
-		if _, err := CreateTap(tap1, fmt.Sprintf("%s/%d", ip0, VMS_NETWORK_SUBNET)); err != nil {
+	if err := CreateTap(tap0, ""); err != nil {
+		return err
+	}
+
+	if TapExists(tap1) {
+		if err := TapDelete(tap1); err != nil {
 			return err
 		}
 	}
+	if err := CreateTap(tap1, fmt.Sprintf("%s/%d", ip0, VMS_NETWORK_SUBNET)); err != nil {
+		return err
+	}
+
 	if err = SetupIPTables(egressIface, tap1); err != nil {
 		return err
 	}

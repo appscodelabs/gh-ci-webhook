@@ -84,7 +84,7 @@ sudo ip tuntap add tap0 mode tap
 sudo ip addr add 172.16.0.1/24 dev tap0
 sudo ip link set tap0 up
 */
-func CreateTap(name, cidr string) (netlink.Link, error) {
+func CreateTap_(name, cidr string) (netlink.Link, error) {
 	tapLinkAttrs := netlink.NewLinkAttrs()
 	tapLinkAttrs.Name = name
 	tapLink := &netlink.Tuntap{
@@ -149,12 +149,32 @@ func CreateTap(name, cidr string) (netlink.Link, error) {
 	return tapLink, nil
 }
 
+/*
+sudo ip tuntap add tap0 mode tap
+sudo ip addr add 172.16.0.1/24 dev tap0
+sudo ip link set tap0 up
+*/
+func CreateTap(name, cidr string) error {
+	if err := sh.Command("ip", "tuntap", "add", name, "mode", "tap").Run(); err != nil {
+		return err
+	}
+	if cidr != "" {
+		if err := sh.Command("ip", "addr", "add", cidr, "dev", name).Run(); err != nil {
+			return err
+		}
+	}
+	if err := sh.Command("ip", "link", "set", name, "up").Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func TapExists(name string) bool {
 	l, err := netlink.LinkByName(name)
 	return l != nil && err == nil
 }
 
-func TapDelete(name string) error {
+func TapDelete_(name string) error {
 	if l, err := netlink.LinkByName(name); err == nil {
 		return netlink.LinkDel(l)
 	} else {
@@ -163,6 +183,11 @@ func TapDelete(name string) error {
 		}
 	}
 	return nil
+}
+
+// sudo ip link del tap0
+func TapDelete(name string) error {
+	return sh.Command("ip", "link", "del", name).Run()
 }
 
 const hexDigit = "0123456789abcdef"

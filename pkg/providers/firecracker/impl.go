@@ -96,6 +96,8 @@ func (p impl) Done(slot any) {
 }
 
 func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
+	klog.Infoln("Starting VM for", providers.EventKey(e))
+
 	ins := slot.(*Instance)
 	if ins == nil {
 		return nil
@@ -128,6 +130,8 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 }
 
 func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
+	klog.Infoln("Stopping VM for", providers.EventKey(e))
+
 	instanceID, ok := GetSlotForWF(e)
 	if !ok {
 		return nil

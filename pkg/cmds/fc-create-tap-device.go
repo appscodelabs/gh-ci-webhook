@@ -29,7 +29,7 @@ func NewCmdFirecrackerCreateTAPDevice() *cobra.Command {
 		Short:             "Firecracker create TAP device",
 		DisableAutoGenTag: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := firecracker.CreateTap(device, "172.16.0.1/24")
+			err := firecracker.CreateTap(device, "172.16.0.1/24")
 			return err
 		},
 	}
