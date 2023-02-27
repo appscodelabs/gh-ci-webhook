@@ -186,7 +186,7 @@ func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e 
 				}
 				kernelArgs["network-config"] = &netcfg
 
-				m.Cfg.KernelArgs = `console=ttyS0 noapic reboot=k panic=1 pci=off nomodules rw ` + kernelArgs.String()
+				m.Cfg.KernelArgs = `keep_bootcon console=ttyS0 noapic reboot=k panic=1 pci=off rw ` + kernelArgs.String()
 				fmt.Println("KERNEL:", m.Cfg.KernelArgs)
 				return nil
 			},
