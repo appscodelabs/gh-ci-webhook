@@ -27,7 +27,10 @@ import (
 )
 
 func NewCmdFirecrackerCreateVM() *cobra.Command {
-	ghToken := os.Getenv("GITHUB_TOKEN")
+	var (
+		ghToken    = os.Getenv("GITHUB_TOKEN")
+		instanceID = 0
+	)
 	cmd := &cobra.Command{
 		Use:               "create-vm",
 		Short:             "Firecracker create VM",
@@ -44,14 +47,15 @@ func NewCmdFirecrackerCreateVM() *cobra.Command {
 			}
 
 			slot := &firecracker.Instance{
-				ID:    7,
+				ID:    instanceID,
 				UID:   passgen.GenerateForCharset(6, passgen.AlphaNum),
-				InUse: false,
+				InUse: true,
 			}
 			return p.StartRunner(slot, nil)
 		},
 	}
 	cmd.Flags().StringVar(&ghToken, "github-token", ghToken, "GitHub Token")
+	cmd.Flags().IntVar(&instanceID, "instance-id", instanceID, "Instance ID")
 	firecracker.DefaultOptions.AddFlags(cmd.Flags())
 
 	return cmd
