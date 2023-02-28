@@ -20,15 +20,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
 	"github.com/google/go-github/v50/github"
 	"github.com/linode/linodego"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"gomodules.xyz/pointer"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -91,22 +88,6 @@ func (_ impl) StopRunner(e *github.WorkflowJobEvent) error {
 	}
 	fmt.Println("instance id:", id)
 
-	token, found := os.LookupEnv("GITHUB_TOKEN")
-	if !found {
-		return errors.New("GITHUB_TOKEN env var is not set")
-	}
-
-	// github client
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
-	tc := oauth2.NewClient(ctx, ts)
-
-	client := github.NewClient(tc)
-	err = providers.DeleteRunner(ctx, client, e.Repo, machineName)
-	if err != nil {
-		return err
-	}
-	fmt.Println("deleted machine:", machineName)
 	return nil
 }
 

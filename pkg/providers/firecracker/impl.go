@@ -30,7 +30,6 @@ import (
 
 	"github.com/google/go-github/v50/github"
 	"github.com/pkg/errors"
-	"golang.org/x/oauth2"
 	"golang.org/x/sys/unix"
 	"gomodules.xyz/x/ioutil"
 	"k8s.io/klog/v2"
@@ -149,24 +148,6 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 	tap1 := fmt.Sprintf("fc%d", instanceID*4+2)
 	_ = TapDelete(tap0)
 	_ = TapDelete(tap1)
-
-	hostname, err := os.Hostname()
-	if err != nil {
-		return err
-	}
-	runnerName := fmt.Sprintf("%s-%d", hostname, instanceID)
-
-	// github client
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: DefaultOptions.GitHubToken})
-	tc := oauth2.NewClient(ctx, ts)
-
-	client := github.NewClient(tc)
-	err = providers.DeleteRunner(ctx, client, e.Repo, runnerName)
-	if err != nil {
-		return err
-	}
-	fmt.Println("deleted runner:", runnerName)
 
 	sts2, _ := p.Status()
 	_ = providers.SendMail(providers.Shut, instanceID, sts2, e)
