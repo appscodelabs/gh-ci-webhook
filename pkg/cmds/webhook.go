@@ -84,7 +84,7 @@ func NewCmdRun(ctx context.Context) *cobra.Command {
 
 			// github client
 			ctx := context.Background()
-			ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ""})
+			ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
 			tc := oauth2.NewClient(ctx, ts)
 
 			gh := github.NewClient(tc)
