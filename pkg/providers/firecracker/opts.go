@@ -50,11 +50,15 @@ func NewOptions() *Options {
 	if err != nil {
 		panic(err)
 	}
+	maxInstances := CPU.LogicalCores/4 - 1
+	if maxInstances < 1 {
+		maxInstances = 1
+	}
 	return &Options{
 		OS:                    "focal",
 		ImageDir:              "",
 		FirecrackerBinaryPath: filepath.Join(dir, "firecracker"),
-		NumInstances:          CPU.LogicalCores / 4,
+		NumInstances:          maxInstances,
 		VcpuCount:             4,
 		MemSizeMib:            1024 * 16,
 	}
