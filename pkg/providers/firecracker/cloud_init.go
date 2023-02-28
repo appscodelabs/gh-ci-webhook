@@ -158,10 +158,11 @@ func BuildData(ghOrg, ghToken string, instanceID int, ghUsernames ...string) (*M
 				SSHAuthorizedKeys: keys,
 			},
 		},
-		Bootcmd: []string{
-			// BUG: https://bugs.launchpad.net/ubuntu/+source/cloud-initramfs-tools/+bug/1958260
-			"apt install --reinstall linux-modules-`uname -r`",
-		},
+		// stopped using nomodules in /proc/cmdline
+		//Bootcmd: []string{
+		//	// BUG: https://bugs.launchpad.net/ubuntu/+source/cloud-initramfs-tools/+bug/1958260
+		//	"apt install --reinstall linux-modules-`uname -r`",
+		//},
 	}
 
 	hostname, err := os.Hostname()
