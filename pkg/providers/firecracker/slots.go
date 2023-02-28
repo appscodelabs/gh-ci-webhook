@@ -21,9 +21,6 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
-
-	"github.com/google/go-github/v50/github"
 	passgen "gomodules.xyz/password-generator"
 )
 
@@ -83,22 +80,4 @@ func (i *Instances) Free(id int) {
 	if i.slots[id].InUse {
 		i.slots[id].Free()
 	}
-}
-
-var (
-	wfToInstanceID = map[string]int{}
-	muWF           sync.Mutex
-)
-
-func SaveWF(id int, e *github.WorkflowJobEvent) {
-	muWF.Lock()
-	defer muWF.Unlock()
-	wfToInstanceID[providers.EventKey(e)] = id
-}
-
-func GetSlotForWF(e *github.WorkflowJobEvent) (int, bool) {
-	muWF.Lock()
-	defer muWF.Unlock()
-	id, ok := wfToInstanceID[providers.EventKey(e)]
-	return id, ok
 }

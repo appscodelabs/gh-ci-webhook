@@ -23,15 +23,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/appscodelabs/gh-ci-webhook/pkg/backend"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/go-github/v50/github"
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/acme/autocert"
+	"golang.org/x/oauth2"
 	shell "gomodules.xyz/go-sh"
 	passgen "gomodules.xyz/password-generator"
 )
@@ -48,10 +51,12 @@ var (
 
 func NewCmdRun(ctx context.Context) *cobra.Command {
 	var (
-		ncOpts      = backend.NewNATSOptions()
-		nc          *nats.Conn
+		ghToken            = os.Getenv("GITHUB_TOKEN")
+		ncOpts             = backend.NewNATSOptions()
 		stream             = backend.StreamName
 		numMachines uint64 = 1
+
+		nc *nats.Conn
 	)
 	cmd := &cobra.Command{
 		Use:               "run",
@@ -77,10 +82,18 @@ func NewCmdRun(ctx context.Context) *cobra.Command {
 				fmt.Printf("using secret token %s\n", secretToken)
 			}
 
-			return runServer(nc, stream, numMachines)
+			// github client
+			ctx := context.Background()
+			ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ""})
+			tc := oauth2.NewClient(ctx, ts)
+
+			gh := github.NewClient(tc)
+
+			return runServer(gh, nc, stream, numMachines)
 		},
 	}
 
+	cmd.Flags().StringVar(&ghToken, "github-token", ghToken, "GitHub Token")
 	cmd.Flags().StringVar(&secretToken, "secret-token", secretToken, "Secret token to verify webhook payloads")
 	cmd.Flags().StringVar(&certDir, "cert-dir", certDir, "Directory where certs are stored")
 	cmd.Flags().StringVar(&email, "email", email, "Email used by Let's Encrypt to notify about problems with issued certificates")
@@ -106,7 +119,7 @@ type Response struct {
 	TLS     *tls.ConnectionState `json:"tls,omitempty"`
 }
 
-func runServer(nc *nats.Conn, stream string, numMachines uint64) error {
+func runServer(gh *github.Client, nc *nats.Conn, stream string, numMachines uint64) error {
 	sh := shell.NewSession()
 	sh.ShowCMD = true
 	sh.PipeFail = true
@@ -130,7 +143,7 @@ func runServer(nc *nats.Conn, stream string, numMachines uint64) error {
 		_ = enc.Encode(resp)
 	})
 	r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
-		err := backend.SubmitPayload(nc, stream, numMachines, r, []byte(secretToken))
+		err := backend.SubmitPayload(gh, nc, stream, numMachines, r, []byte(secretToken))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

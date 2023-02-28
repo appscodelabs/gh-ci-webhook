@@ -220,7 +220,6 @@ func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e 
 	if err := m.Start(ctx); err != nil {
 		return err
 	}
-	SaveWF(ins.ID, e)
 
 	go func() {
 		defer func() {

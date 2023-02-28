@@ -18,8 +18,11 @@ package backend
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 
@@ -28,48 +31,86 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zeebo/xxh3"
 	"gomodules.xyz/sets"
+	"k8s.io/klog/v2"
 )
 
-func SubmitPayload(nc *nats.Conn, stream string, numMachines uint64, r *http.Request, secretToken []byte) error {
+func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines uint64, r *http.Request, secretToken []byte) error {
 	eventType := github.WebHookType(r)
 	payload, err := github.ValidatePayload(r, secretToken)
 	if err != nil {
 		return err
 	}
-	e, err := github.ParseWebHook(eventType, payload)
+	event, err := github.ParseWebHook(eventType, payload)
 	if err != nil {
 		return err
 	}
 
-	switch event := e.(type) {
-	case *github.WorkflowJobEvent:
-		// https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#about-autoscaling
-		// BUG: https://github.com/nats-io/natscli/issues/703
+	e, ok := event.(*github.WorkflowJobEvent)
+	if !ok {
+		return nil
+	}
+	// https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#about-autoscaling
+	// BUG: https://github.com/nats-io/natscli/issues/703
 
-		if !sets.NewString(event.GetWorkflowJob().Labels...).Has("self-hosted") {
-			return nil
+	action := e.GetAction()
+	var subj string
+	if action == "completed" && e.GetWorkflowJob().GetRunnerGroupName() == "Default" {
+		parts := strings.Split(e.GetWorkflowJob().GetRunnerName(), "-")
+		if len(parts) != 3 {
+			return fmt.Errorf("invalid runner name %s for %s", e.GetWorkflowJob().GetRunnerName(), providers.EventKey(e))
+		}
+		machineID, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return errors.Wrapf(err, "failed to detect machine id from runner name %s for %s", e.GetWorkflowJob().GetRunnerName(), providers.EventKey(e))
 		}
 
-		h := xxh3.New()
-		_, _ = h.WriteString(providers.EventKey(event))
-		subj := fmt.Sprintf("%s.machines.%s.%d",
+		subj = fmt.Sprintf("%s.machines.%s.%d",
 			stream,
-			event.WorkflowJob.GetStatus(),
+			e.WorkflowJob.GetStatus(),
+			machineID,
+		)
+	} else if action == "queued" && (runsOnSelfHosted(e) || mustUsedUpFreeMinutes(gh, e.GetOrg().GetLogin())) {
+		h := xxh3.New()
+		_, _ = h.WriteString(providers.EventKey(e))
+		subj = fmt.Sprintf("%s.machines.%s.%d",
+			stream,
+			e.WorkflowJob.GetStatus(),
 			h.Sum64()%numMachines,
 		)
+	}
 
+	if subj != "" {
 		var buf bytes.Buffer
 		buf.WriteString(eventType)
 		buf.WriteRune(':')
 		buf.Write(payload)
 		_, err = nc.Request(subj, buf.Bytes(), NatsRequestTimeout)
 		if err != nil {
-			return errors.Wrap(err, "failed to store event in NATS")
+			return errors.Wrap(err, "failed to store e in NATS")
 		}
-		return nil
-	default:
-		return errors.New("unsupported event")
+		klog.Infoln("submitted job for", providers.EventKey(e))
 	}
+	return nil
+}
+
+func usedUpFreeMinutes(gh *github.Client, org string) (bool, error) {
+	ab, _, err := gh.Billing.GetActionsBillingOrg(context.Background(), org)
+	if err != nil {
+		return false, errors.Wrapf(err, "can't read action billing info for %s", org)
+	}
+	return ab.IncludedMinutes-ab.TotalMinutesUsed < 60.0, nil
+}
+
+func mustUsedUpFreeMinutes(gh *github.Client, org string) bool {
+	result, err := usedUpFreeMinutes(gh, org)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func runsOnSelfHosted(e *github.WorkflowJobEvent) bool {
+	return sets.NewString(e.GetWorkflowJob().Labels...).Has("self-hosted")
 }
 
 func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) (*github.WorkflowJobEvent, error) {
@@ -84,10 +125,7 @@ func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) (*github.Workflow
 	}
 	e := event.(*github.WorkflowJobEvent)
 
-	if sets.NewString(e.GetWorkflowJob().Labels...).Has("self-hosted") {
-		return e, mgr.Provider.StartRunner(slot, e)
-	}
-	return e, nil
+	return e, mgr.Provider.StartRunner(slot, e)
 }
 
 func (mgr *Manager) ProcessCompletedMsg(payload []byte) (*github.WorkflowJobEvent, error) {
@@ -102,8 +140,5 @@ func (mgr *Manager) ProcessCompletedMsg(payload []byte) (*github.WorkflowJobEven
 	}
 	e := event.(*github.WorkflowJobEvent)
 
-	if sets.NewString(e.GetWorkflowJob().Labels...).Has("self-hosted") {
-		return e, mgr.Provider.StopRunner(e)
-	}
-	return e, nil
+	return e, mgr.Provider.StopRunner(e)
 }

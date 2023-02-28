@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
@@ -130,11 +132,12 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 }
 
 func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
-	klog.Infoln("Stopping VM for", providers.EventKey(e))
+	klog.Infoln("Stopping VM ", e.GetWorkflowJob().GetRunnerName(), "for", providers.EventKey(e))
 
-	instanceID, ok := GetSlotForWF(e)
-	if !ok {
-		return nil
+	parts := strings.Split(e.GetWorkflowJob().GetRunnerName(), "-")
+	instanceID, err := strconv.Atoi(parts[len(parts)-1])
+	if err != nil {
+		return err
 	}
 
 	sts, _ := p.Status()
