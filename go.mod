@@ -6,6 +6,7 @@ require (
 	github.com/coreos/go-iptables v0.6.0
 	github.com/firecracker-microvm/firecracker-go-sdk v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.0.8
+	github.com/gomodules/agecache v0.0.0-20180510002131-52691b5239ad
 	github.com/google/go-containerregistry v0.12.1
 	github.com/google/go-github/v50 v50.0.0
 	github.com/klauspost/cpuid/v2 v2.2.3

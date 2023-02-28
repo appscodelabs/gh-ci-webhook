@@ -151,6 +151,9 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/gomodules/agecache v0.0.0-20180510002131-52691b5239ad
+## explicit
+github.com/gomodules/agecache
 # github.com/google/go-containerregistry v0.12.1
 ## explicit; go 1.17
 github.com/google/go-containerregistry/internal/redact

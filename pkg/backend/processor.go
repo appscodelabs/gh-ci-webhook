@@ -23,9 +23,12 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 
+	"github.com/gomodules/agecache"
 	"github.com/google/go-github/v50/github"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
@@ -34,7 +37,23 @@ import (
 	"k8s.io/klog/v2"
 )
 
+var (
+	actionsBillingCache     *agecache.Cache
+	actionsBillingCacheInit sync.Once
+)
+
 func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines uint64, r *http.Request, secretToken []byte) error {
+	actionsBillingCacheInit.Do(func() {
+		actionsBillingCache = agecache.New(agecache.Config{
+			Capacity: 100,
+			MaxAge:   70 * time.Minute,
+			MinAge:   60 * time.Minute,
+			OnMiss: func(key interface{}) (interface{}, error) {
+				return usedUpFreeMinutes(gh, key.(string))
+			},
+		})
+	})
+
 	eventType := github.WebHookType(r)
 	payload, err := github.ValidatePayload(r, secretToken)
 	if err != nil {
@@ -69,7 +88,7 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines 
 			e.WorkflowJob.GetStatus(),
 			machineID,
 		)
-	} else if action == "queued" && (runsOnSelfHosted(e) || mustUsedUpFreeMinutes(gh, e.GetOrg().GetLogin())) {
+	} else if action == "queued" && (runsOnSelfHosted(e) || mustUsedUpFreeMinutes(actionsBillingCache.Get(e.GetOrg().GetLogin()))) {
 		h := xxh3.New()
 		_, _ = h.WriteString(providers.EventKey(e))
 		subj = fmt.Sprintf("%s.machines.%s.%d",
@@ -101,12 +120,11 @@ func usedUpFreeMinutes(gh *github.Client, org string) (bool, error) {
 	return ab.IncludedMinutes-ab.TotalMinutesUsed < 60.0, nil
 }
 
-func mustUsedUpFreeMinutes(gh *github.Client, org string) bool {
-	result, err := usedUpFreeMinutes(gh, org)
+func mustUsedUpFreeMinutes(used interface{}, err error) bool {
 	if err != nil {
 		panic(err)
 	}
-	return result
+	return used.(bool)
 }
 
 func runsOnSelfHosted(e *github.WorkflowJobEvent) bool {
