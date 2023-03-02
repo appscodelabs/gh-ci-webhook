@@ -88,7 +88,8 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines 
 			e.WorkflowJob.GetStatus(),
 			machineID,
 		)
-	} else if action == "queued" && (runsOnSelfHosted(e) || mustUsedUpFreeMinutes(actionsBillingCache.Get(e.GetOrg().GetLogin()))) {
+	} else if action == "queued" && (runsOnSelfHosted(e) ||
+		(e.GetRepo().GetPrivate() && mustUsedUpFreeMinutes(actionsBillingCache.Get(e.GetOrg().GetLogin())))) {
 		h := xxh3.New()
 		_, _ = h.WriteString(providers.EventKey(e))
 		subj = fmt.Sprintf("%s.machines.%s.%d",
