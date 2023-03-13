@@ -115,10 +115,19 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 	}
 	// defer os.RemoveAll(wfDir) // remove in StopRunner
 
+	// optimize rootfs copy
 	klog.InfoS("copying rootfs", "path", wfRootFSPath)
-	err = ioutil.CopyFile(wfRootFSPath, DefaultOptions.RootFSPath())
-	if err != nil {
-		return err
+	cpfs := fmt.Sprintf("%s-%d", DefaultOptions.RootFSPath(), ins.ID)
+	if _, err := os.Stat(cpfs); os.IsNotExist(err) {
+		err = ioutil.CopyFile(wfRootFSPath, DefaultOptions.RootFSPath())
+		if err != nil {
+			return err
+		}
+	} else {
+		err = os.Rename(cpfs, wfRootFSPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Setup socket and snapshot + memory paths
@@ -135,6 +144,14 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 
 	parts := strings.Split(e.GetWorkflowJob().GetRunnerName(), "-")
 	instanceID, err := strconv.Atoi(parts[len(parts)-1])
+	if err != nil {
+		return err
+	}
+
+	// optimize rootfs copy
+	cpfs := fmt.Sprintf("%s-%d", DefaultOptions.RootFSPath(), instanceID)
+	klog.InfoS("copying rootfs", "path", cpfs)
+	err = ioutil.CopyFile(cpfs, DefaultOptions.RootFSPath())
 	if err != nil {
 		return err
 	}
