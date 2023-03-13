@@ -38,6 +38,7 @@ import (
 )
 
 var (
+	// nolint:unused
 	actionsBillingCache     *agecache.Cache
 	actionsBillingCacheInit sync.Once
 )
@@ -122,6 +123,7 @@ func usedUpFreeMinutes(gh *github.Client, org string) (bool, error) {
 	return ab.IncludedMinutes-ab.TotalMinutesUsed < 60.0, nil
 }
 
+// nolint:unused
 func mustUsedUpFreeMinutes(used interface{}, err error) bool {
 	if err != nil {
 		panic(err)
@@ -129,6 +131,7 @@ func mustUsedUpFreeMinutes(used interface{}, err error) bool {
 	return used.(bool)
 }
 
+// nolint:unused
 func runsOnSelfHosted(e *github.WorkflowJobEvent) bool {
 	return sets.NewString(e.GetWorkflowJob().Labels...).Has("self-hosted")
 }
