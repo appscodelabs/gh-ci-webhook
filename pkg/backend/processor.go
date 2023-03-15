@@ -42,7 +42,7 @@ var (
 	actionsBillingCacheInit sync.Once
 )
 
-func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines uint64, r *http.Request, secretToken []byte) error {
+func initCache(gh *github.Client) {
 	actionsBillingCacheInit.Do(func() {
 		actionsBillingCache = agecache.New(agecache.Config{
 			Capacity: 100,
@@ -53,6 +53,10 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines 
 			},
 		})
 	})
+}
+
+func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines uint64, r *http.Request, secretToken []byte) error {
+	initCache(gh)
 
 	eventType := github.WebHookType(r)
 	payload, err := github.ValidatePayload(r, secretToken)
@@ -115,6 +119,8 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines 
 }
 
 func DefaultJobLabel(gh *github.Client, org string, private bool) string {
+	initCache(gh)
+
 	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
 		return "self-hosted"
 	}
