@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/appscodelabs/gh-ci-webhook/pkg/backend"
@@ -129,6 +130,13 @@ func runServer(gh *github.Client, nc *nats.Conn, stream string, numMachines uint
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	// Usage: https://github.com/orgs/community/discussions/49299#discussioncomment-5315622
+	r.Get("/runs-on/{org}", func(w http.ResponseWriter, r *http.Request) {
+		org := chi.URLParam(r, "org")
+		private, _ := strconv.ParseBool(r.URL.Query().Get("private"))
+		label := backend.DefaultJobLabel(gh, org, private)
+		_, _ = w.Write([]byte(label))
+	})
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		resp := &Response{
 			Type:    "http",

@@ -38,7 +38,6 @@ import (
 )
 
 var (
-	// nolint:unused
 	actionsBillingCache     *agecache.Cache
 	actionsBillingCacheInit sync.Once
 )
@@ -115,6 +114,13 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines 
 	return nil
 }
 
+func DefaultJobLabel(gh *github.Client, org string, private bool) string {
+	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
+		return "self-hosted"
+	}
+	return "ubuntu-20.04"
+}
+
 func usedUpFreeMinutes(gh *github.Client, org string) (bool, error) {
 	ab, _, err := gh.Billing.GetActionsBillingOrg(context.Background(), org)
 	if err != nil {
@@ -123,7 +129,6 @@ func usedUpFreeMinutes(gh *github.Client, org string) (bool, error) {
 	return ab.IncludedMinutes-ab.TotalMinutesUsed < 60.0, nil
 }
 
-// nolint:unused
 func mustUsedUpFreeMinutes(used interface{}, err error) bool {
 	if err != nil {
 		panic(err)
