@@ -36,6 +36,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const runnerLabel = "firecracker"
+
 var (
 	actionsBillingCache     *agecache.Cache
 	actionsBillingCacheInit sync.Once
@@ -121,7 +123,7 @@ func DefaultJobLabel(gh *github.Client, org string, private bool) string {
 	initCache(gh)
 
 	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
-		return "self-hosted"
+		return runnerLabel
 	}
 	return "ubuntu-20.04"
 }
@@ -142,7 +144,7 @@ func mustUsedUpFreeMinutes(used interface{}, err error) bool {
 }
 
 func runsOnSelfHosted(e *github.WorkflowJobEvent) bool {
-	return len(e.GetWorkflowJob().Labels) == 1 && e.GetWorkflowJob().Labels[0] == "self-hosted"
+	return len(e.GetWorkflowJob().Labels) == 1 && e.GetWorkflowJob().Labels[0] == runnerLabel
 }
 
 func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) (*github.WorkflowJobEvent, error) {
