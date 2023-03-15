@@ -71,3 +71,47 @@ firecracker create-vm \
 sudo /home/tamal/go/bin/gh-ci-webhook firecracker create-tap --name=tap100
 ifconfig
 ```
+
+## Configure label detector
+
+```
+apt update
+apt upgrade
+apt install curl jq
+
+export USER=bytebuilders # GitHub Org name
+
+adduser --disabled-password --gecos "" $USER
+usermod -aG sudo $USER
+rsync --archive --chown=$USER:$USER ~/.ssh /home/$USER
+echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+
+su $USER
+cd /home/$USER
+
+export RUNNER_OWNER=$USER
+export RUNNER_CFG_PAT=***
+export RUNNER_NAME=gha-label-detector-0
+
+curl -s https://raw.githubusercontent.com/actions/runner/main/scripts/create-latest-svc.sh | bash -s -- -s ${RUNNER_OWNER} -n ${RUNNER_NAME} -f -l label-detector
+```
+
+## Update Webhook Host
+
+```
+curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.11/gh-ci-webhook-linux-amd64
+chmod +x gh-ci-webhook-linux-amd64
+mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
+
+systemctl stop gh-ci-webhook
+```
+
+## Update Worker hosts
+
+```
+curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.11/gh-ci-webhook-linux-amd64
+chmod +x gh-ci-webhook-linux-amd64
+mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
+systemctl restart gh-ci-hostctl
+```
