@@ -33,7 +33,6 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"github.com/zeebo/xxh3"
-	"gomodules.xyz/sets"
 	"k8s.io/klog/v2"
 )
 
@@ -142,9 +141,8 @@ func mustUsedUpFreeMinutes(used interface{}, err error) bool {
 	return used.(bool)
 }
 
-// nolint:unused
 func runsOnSelfHosted(e *github.WorkflowJobEvent) bool {
-	return sets.NewString(e.GetWorkflowJob().Labels...).Has("self-hosted")
+	return len(e.GetWorkflowJob().Labels) == 1 && e.GetWorkflowJob().Labels[0] == "self-hosted"
 }
 
 func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) (*github.WorkflowJobEvent, error) {

@@ -27,7 +27,6 @@ require (
 	gomodules.xyz/mailer v0.0.18
 	gomodules.xyz/password-generator v0.2.9
 	gomodules.xyz/pointer v0.1.0
-	gomodules.xyz/sets v0.2.1
 	gomodules.xyz/signals v0.2.0
 	gomodules.xyz/wait v0.2.0
 	gomodules.xyz/x v0.0.14
@@ -113,6 +112,7 @@ require (
 	gomodules.xyz/encoding v0.0.7 // indirect
 	gomodules.xyz/flags v0.1.3 // indirect
 	gomodules.xyz/gdrive-utils v0.0.2 // indirect
+	gomodules.xyz/sets v0.2.1 // indirect
 	google.golang.org/api v0.103.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221201204527-e3fa12d562f3 // indirect
