@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/appscodelabs/gh-ci-webhook/pkg/backend"
@@ -133,7 +132,7 @@ func runServer(gh *github.Client, nc *nats.Conn, stream string, numMachines uint
 	// Usage: https://github.com/orgs/community/discussions/49299#discussioncomment-5315622
 	r.Get("/runs-on/{org}", func(w http.ResponseWriter, r *http.Request) {
 		org := chi.URLParam(r, "org")
-		private, _ := strconv.ParseBool(r.URL.Query().Get("private"))
+		private := r.URL.Query().Get("visibility") == "private"
 		label := backend.DefaultJobLabel(gh, org, private)
 		_, _ = w.Write([]byte(label))
 	})
