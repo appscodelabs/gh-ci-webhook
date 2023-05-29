@@ -31,7 +31,7 @@ import (
 	"github.com/google/go-github/v52/github"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
-	"gomodules.xyz/x/ioutil"
+	"gomodules.xyz/go-sh"
 	"k8s.io/klog/v2"
 )
 
@@ -119,7 +119,9 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 	klog.InfoS("copying rootfs", "path", wfRootFSPath)
 	cpfs := fmt.Sprintf("%s-%d", DefaultOptions.RootFSPath(), ins.ID)
 	if _, err := os.Stat(cpfs); os.IsNotExist(err) {
-		err = ioutil.CopyFile(wfRootFSPath, DefaultOptions.RootFSPath())
+		// cp command runs faster than CopyFile
+		err = sh.Command("cp", DefaultOptions.RootFSPath(), wfRootFSPath).Run()
+		// err = ioutil.CopyFile(wfRootFSPath, DefaultOptions.RootFSPath())
 		if err != nil {
 			return err
 		}
@@ -151,7 +153,9 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 	// optimize rootfs copy
 	cpfs := fmt.Sprintf("%s-%d", DefaultOptions.RootFSPath(), instanceID)
 	klog.InfoS("copying rootfs", "path", cpfs)
-	err = ioutil.CopyFile(cpfs, DefaultOptions.RootFSPath())
+	// cp command runs faster than CopyFile
+	err = sh.Command("cp", DefaultOptions.RootFSPath(), cpfs).Run()
+	// err = ioutil.CopyFile(cpfs, DefaultOptions.RootFSPath())
 	if err != nil {
 		return err
 	}
