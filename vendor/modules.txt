@@ -107,9 +107,6 @@ github.com/firecracker-microvm/firecracker-go-sdk/client/models
 github.com/firecracker-microvm/firecracker-go-sdk/client/operations
 github.com/firecracker-microvm/firecracker-go-sdk/cni/internal
 github.com/firecracker-microvm/firecracker-go-sdk/cni/vmconf
-# github.com/fsnotify/fsnotify v1.6.0
-## explicit; go 1.16
-github.com/fsnotify/fsnotify
 # github.com/gabriel-vasile/mimetype v1.4.1-rc1
 ## explicit; go 1.12
 github.com/gabriel-vasile/mimetype
@@ -462,7 +459,6 @@ gomodules.xyz/signals
 gomodules.xyz/wait
 # gomodules.xyz/x v0.0.14
 ## explicit; go 1.17
-gomodules.xyz/x/ioutil
 gomodules.xyz/x/time
 gomodules.xyz/x/version
 # google.golang.org/api v0.103.0
