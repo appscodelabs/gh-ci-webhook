@@ -29,7 +29,7 @@ import (
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 
 	"github.com/gomodules/agecache"
-	"github.com/google/go-github/v50/github"
+	"github.com/google/go-github/v52/github"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"github.com/zeebo/xxh3"

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/google/go-github/v50/github"
+	"github.com/google/go-github/v52/github"
 )
 
 type Interface interface {

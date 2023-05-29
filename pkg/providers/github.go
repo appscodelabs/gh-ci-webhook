@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/go-github/v50/github"
+	"github.com/google/go-github/v52/github"
 )
 
 const (

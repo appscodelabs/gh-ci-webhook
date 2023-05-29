@@ -19,7 +19,7 @@ package dummy
 import (
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
-	"github.com/google/go-github/v50/github"
+	"github.com/google/go-github/v52/github"
 )
 
 type impl struct{}

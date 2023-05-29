@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/google/go-github/v50/github"
+	"github.com/google/go-github/v52/github"
 	"gomodules.xyz/mailer"
 )
 
