@@ -110,7 +110,7 @@ systemctl stop gh-ci-webhook
 ## Update Worker hosts
 
 ```
-curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.11/gh-ci-webhook-linux-amd64
+curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.12/gh-ci-webhook-linux-amd64
 chmod +x gh-ci-webhook-linux-amd64
 mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
 systemctl restart gh-ci-hostctl
