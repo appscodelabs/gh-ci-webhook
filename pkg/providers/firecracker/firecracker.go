@@ -24,6 +24,7 @@ import (
 	sdk "github.com/firecracker-microvm/firecracker-go-sdk"
 	"github.com/firecracker-microvm/firecracker-go-sdk/client/models"
 	"github.com/google/go-github/v52/github"
+	. "github.com/klauspost/cpuid/v2"
 	log "github.com/sirupsen/logrus"
 	"gomodules.xyz/pointer"
 )
@@ -46,6 +47,9 @@ func withNetworkInterface(networkInterface sdk.NetworkInterface) configOpt {
 
 func createNewConfig(ins *Instance, socketPath string, opts ...configOpt) sdk.Config {
 	cpuTemplate := models.CPUTemplateT2
+	if CPU.VendorID != Intel {
+		cpuTemplate = ""
+	}
 	smt := false
 
 	driveID := "root"
