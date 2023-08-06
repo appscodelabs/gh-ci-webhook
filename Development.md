@@ -31,11 +31,11 @@ systemctl restart gh-ci-hostctl
 script gist: https://gist.github.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7
 
 ```
-curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- bionic 20G
+curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- bionic 100G
 
-curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- focal 20G
+curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- focal 100G
 
-curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- jammy 20G
+curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- jammy 100G
 ```
 
 ## Download firecracker binary
@@ -100,7 +100,7 @@ curl -s https://raw.githubusercontent.com/actions/runner/main/scripts/create-lat
 ## Update Webhook Host
 
 ```
-curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.11/gh-ci-webhook-linux-amd64
+curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.12/gh-ci-webhook-linux-amd64
 chmod +x gh-ci-webhook-linux-amd64
 mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
 
