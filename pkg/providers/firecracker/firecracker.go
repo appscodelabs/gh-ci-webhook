@@ -23,7 +23,7 @@ import (
 
 	sdk "github.com/firecracker-microvm/firecracker-go-sdk"
 	"github.com/firecracker-microvm/firecracker-go-sdk/client/models"
-	"github.com/google/go-github/v52/github"
+	"github.com/google/go-github/v55/github"
 	. "github.com/klauspost/cpuid/v2"
 	log "github.com/sirupsen/logrus"
 	"gomodules.xyz/pointer"

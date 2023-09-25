@@ -28,7 +28,7 @@ import (
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
-	"github.com/google/go-github/v52/github"
+	"github.com/google/go-github/v55/github"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 	"gomodules.xyz/go-sh"

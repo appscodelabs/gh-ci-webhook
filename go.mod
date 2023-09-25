@@ -8,20 +8,20 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/gomodules/agecache v0.0.0-20180510002131-52691b5239ad
 	github.com/google/go-containerregistry v0.12.1
-	github.com/google/go-github/v52 v52.0.0
+	github.com/google/go-github/v55 v55.0.0
 	github.com/klauspost/cpuid/v2 v2.2.3
-	github.com/linode/linodego v1.14.1
-	github.com/nats-io/nats.go v1.28.0
+	github.com/linode/linodego v1.22.0
+	github.com/nats-io/nats.go v1.30.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
-	github.com/spf13/cobra v1.6.0
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230206183746-70ca0345eede
 	github.com/zeebo/xxh3 v1.0.2
 	gocloud.dev v0.28.0
-	golang.org/x/crypto v0.7.0
+	golang.org/x/crypto v0.13.0
 	golang.org/x/oauth2 v0.7.0
-	golang.org/x/sys v0.7.0
+	golang.org/x/sys v0.12.0
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.6
 	gomodules.xyz/mailer v0.0.18
@@ -29,7 +29,7 @@ require (
 	gomodules.xyz/pointer v0.1.0
 	gomodules.xyz/signals v0.2.0
 	gomodules.xyz/wait v0.2.0
-	gomodules.xyz/x v0.0.14
+	gomodules.xyz/x v0.0.15
 	google.golang.org/grpc v1.51.0
 	k8s.io/apimachinery v0.25.3
 	k8s.io/klog/v2 v2.80.1
@@ -40,13 +40,13 @@ require (
 	cloud.google.com/go/compute v1.13.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.2 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.1.1 // indirect
+	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/cloudflare/circl v1.1.0 // indirect
+	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0 // indirect
 	github.com/containerd/fifo v1.0.0 // indirect
 	github.com/containernetworking/cni v1.0.1 // indirect
@@ -68,7 +68,7 @@ require (
 	github.com/go-openapi/strfmt v0.21.3 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-openapi/validate v0.22.0 // indirect
-	github.com/go-resty/resty/v2 v2.1.1-0.20191201195748-d7b97669fe48 // indirect
+	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/gocarina/gocsv v0.0.0-20211020200912-82fc2684cc48 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -82,10 +82,10 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -94,7 +94,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nats-io/nats-server/v2 v2.9.14 // indirect
-	github.com/nats-io/nkeys v0.4.4 // indirect
+	github.com/nats-io/nkeys v0.4.5 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
@@ -105,8 +105,8 @@ require (
 	github.com/yuin/goldmark v1.4.13 // indirect
 	go.mongodb.org/mongo-driver v1.10.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gomodules.xyz/clock v0.0.0-20200817085942-06523dba733f // indirect
 	gomodules.xyz/email v0.1.0 // indirect

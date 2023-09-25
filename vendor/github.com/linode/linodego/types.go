@@ -3,6 +3,7 @@ package linodego
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -11,7 +12,7 @@ import (
 type LinodeType struct {
 	ID         string          `json:"id"`
 	Disk       int             `json:"disk"`
-	Class      LinodeTypeClass `json:"class"` // enum: nanode, standard, highmem, dedicated
+	Class      LinodeTypeClass `json:"class"` // enum: nanode, standard, highmem, dedicated, gpu
 	Price      *LinodePrice    `json:"price"`
 	Label      string          `json:"label"`
 	Addons     *LinodeAddons   `json:"addons"`
@@ -19,6 +20,8 @@ type LinodeType struct {
 	Memory     int             `json:"memory"`
 	Transfer   int             `json:"transfer"`
 	VCPUs      int             `json:"vcpus"`
+	GPUs       int             `json:"gpus"`
+	Successor  string          `json:"successor"`
 }
 
 // LinodePrice represents a linode type price object
@@ -46,6 +49,7 @@ const (
 	ClassStandard  LinodeTypeClass = "standard"
 	ClassHighmem   LinodeTypeClass = "highmem"
 	ClassDedicated LinodeTypeClass = "dedicated"
+	ClassGPU       LinodeTypeClass = "gpu"
 )
 
 // LinodeTypesPagedResponse represents a linode types API response for listing
@@ -93,7 +97,7 @@ func (c *Client) ListTypes(ctx context.Context, opts *ListOptions) ([]LinodeType
 
 // GetType gets the type with the provided ID. This endpoint is cached by default.
 func (c *Client) GetType(ctx context.Context, typeID string) (*LinodeType, error) {
-	e := fmt.Sprintf("linode/types/%s", typeID)
+	e := fmt.Sprintf("linode/types/%s", url.PathEscape(typeID))
 
 	if result := c.getCachedResponse(e); result != nil {
 		result := result.(LinodeType)
