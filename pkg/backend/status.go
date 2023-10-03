@@ -82,19 +82,29 @@ func (m *StatusReporter) setStatus(msg []byte) {
 		klog.Errorln("bad status report ", string(msg))
 		return
 	}
-	s := MachineStatus{
+	cur := MachineStatus{
 		Name:      fields[0],
 		Status:    Status(fields[1]),
 		Timestamp: time.Now(),
 		Comment:   "",
 	}
 	if len(fields) == 3 {
-		s.Comment = fields[2]
+		cur.Comment = fields[2]
 	}
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.inventory[s.Name] = s
+
+	last, found := m.inventory[cur.Name]
+	if !found || last.Status != cur.Status {
+		m.inventory[cur.Name] = cur
+	} else {
+		cur.Timestamp = last.Timestamp
+		if cur.Comment == "" {
+			cur.Comment = last.Comment
+		}
+		m.inventory[cur.Name] = cur
+	}
 }
 
 func (m *StatusReporter) Render() []byte {
