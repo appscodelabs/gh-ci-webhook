@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/appscodelabs/gh-ci-webhook/pkg/backend"
+	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 
 	"github.com/google/go-github/v55/github"
 	"github.com/nats-io/nats.go"
@@ -45,6 +46,8 @@ func NewCmdWaitForJob() *cobra.Command {
 		DisableAutoGenTag: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// ncOpts.Addr = "127.0.0.1:4222"
+
+			hostname, _ := os.Hostname()
 
 			var err error
 			nc, err = backend.NewConnection(ncOpts.Addr, ncOpts.CredFile)
@@ -67,8 +70,12 @@ func NewCmdWaitForJob() *cobra.Command {
 					)
 					break
 				}
+
+				backend.ReportStatus(nc, hostname, backend.StatusWaiting)
 				time.Sleep(10 * time.Second)
 			}
+
+			backend.ReportStatus(nc, hostname, backend.StatusPicked, providers.EventKey(event))
 
 			ghRepo := event.GetRepo().GetOwner().GetLogin() + "/" + event.GetRepo().GetName()
 			fmt.Println(ghRepo)
