@@ -19,9 +19,11 @@ package cmds
 import (
 	"os"
 
+	"github.com/appscodelabs/gh-ci-webhook/pkg/backend"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/firecracker"
 
+	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	passgen "gomodules.xyz/password-generator"
 )
@@ -30,6 +32,8 @@ func NewCmdFirecrackerCreateVM() *cobra.Command {
 	var (
 		ghToken    = os.Getenv("GITHUB_TOKEN")
 		instanceID = 0
+		ncOpts     = backend.NewNATSOptions()
+		nc         *nats.Conn
 	)
 	cmd := &cobra.Command{
 		Use:               "create-vm",
@@ -38,11 +42,18 @@ func NewCmdFirecrackerCreateVM() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			firecracker.DefaultOptions.GitHubToken = ghToken
 
+			var err error
+			nc, err = backend.NewConnection(ncOpts.Addr, ncOpts.CredFile)
+			if err != nil {
+				return err
+			}
+			defer nc.Drain() //nolint:errcheck
+
 			p, err := api.Provider("firecracker")
 			if err != nil {
 				return err
 			}
-			if err := p.Init(); err != nil {
+			if err := p.Init(nc); err != nil {
 				return err
 			}
 
@@ -57,6 +68,7 @@ func NewCmdFirecrackerCreateVM() *cobra.Command {
 	cmd.Flags().StringVar(&ghToken, "github-token", ghToken, "GitHub Token")
 	cmd.Flags().IntVar(&instanceID, "instance-id", instanceID, "Instance ID")
 	firecracker.DefaultOptions.AddFlags(cmd.Flags())
+	ncOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }

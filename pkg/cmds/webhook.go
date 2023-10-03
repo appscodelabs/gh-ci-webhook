@@ -49,7 +49,7 @@ var (
 	enableSSL   bool
 )
 
-func NewCmdRun(ctx context.Context) *cobra.Command {
+func NewCmdRun() *cobra.Command {
 	var (
 		ghToken = os.Getenv("GITHUB_TOKEN")
 		ncOpts  = backend.NewNATSOptions()
@@ -136,7 +136,7 @@ func runServer(gh *github.Client, nc *nats.Conn, sp *backend.StatusReporter) err
 		_, _ = w.Write([]byte(label))
 	})
 
-	r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/runner-status", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(sp.Render())
 	})
 

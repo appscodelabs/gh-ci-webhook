@@ -27,6 +27,7 @@ import (
 
 	"github.com/google/go-github/v55/github"
 	"github.com/linode/linodego"
+	"github.com/nats-io/nats.go"
 	"golang.org/x/oauth2"
 	passgen "gomodules.xyz/password-generator"
 	"gomodules.xyz/pointer"
@@ -51,7 +52,7 @@ func (_ impl) Name() string {
 	return "linode"
 }
 
-func (_ impl) Init() error {
+func (_ impl) Init(nc *nats.Conn) error {
 	return nil
 }
 

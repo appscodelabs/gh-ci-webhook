@@ -59,7 +59,7 @@ func New(nc *nats.Conn, opts Options) *Manager {
 
 func (mgr *Manager) Start(ctx context.Context, jsOpts ...jetstream.JetStreamOpt) error {
 	if mgr.Provider != nil {
-		err := mgr.Provider.Init()
+		err := mgr.Provider.Init(mgr.nc)
 		if err != nil {
 			return errors.Wrap(err, "failed to init provider")
 		}

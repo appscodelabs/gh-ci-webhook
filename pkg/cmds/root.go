@@ -36,7 +36,7 @@ func NewRootCmd() *cobra.Command {
 
 	ctx := signals.SetupSignalContext()
 
-	rootCmd.AddCommand(NewCmdRun(ctx))
+	rootCmd.AddCommand(NewCmdRun())
 	rootCmd.AddCommand(NewCmdHostctl(ctx))
 	rootCmd.AddCommand(NewCmdWaitForJob())
 	rootCmd.AddCommand(NewCmdFirecracker())

@@ -25,10 +25,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/appscodelabs/gh-ci-webhook/pkg/backend"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
 	"github.com/google/go-github/v55/github"
+	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 	"gomodules.xyz/go-sh"
@@ -36,6 +38,7 @@ import (
 )
 
 type impl struct {
+	nc  *nats.Conn
 	ins *Instances
 }
 
@@ -49,7 +52,7 @@ func (_ impl) Name() string {
 	return "firecracker"
 }
 
-func (p *impl) Init() error {
+func (p *impl) Init(nc *nats.Conn) error {
 	p.ins = NewInstances(DefaultOptions.NumInstances)
 
 	/*
@@ -102,14 +105,20 @@ func (p impl) StartRunner(slot any) error {
 		return nil
 	}
 
-	klog.Infoln("Starting VM for", ins.ID)
+	hostname, err := os.Hostname()
+	if err != nil {
+		return err
+	}
+	runnerName := fmt.Sprintf("%s-%d", hostname, ins.ID)
+	klog.Infoln("Starting VM ", runnerName)
+	backend.ReportStatus(p.nc, runnerName, backend.StatusStarting)
 
 	sts, _ := p.Status()
 	_ = providers.SendMail(providers.Starting, ins.ID, sts)
 
 	wfRootFSPath := WorkflowRunRootFSPath(ins.UID)
 	wfDir := filepath.Dir(wfRootFSPath)
-	err := os.MkdirAll(wfDir, 0o755)
+	err = os.MkdirAll(wfDir, 0o755)
 	if err != nil {
 		return err
 	}
@@ -138,11 +147,13 @@ func (p impl) StartRunner(slot any) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	ins.cancel = cancel
-	return p.createVM(ctx, ins, socketPath)
+	return p.createVM(ctx, ins, runnerName, socketPath)
 }
 
 func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 	klog.Infoln("Stopping VM ", e.GetWorkflowJob().GetRunnerName(), "for", providers.EventKey(e))
+
+	backend.ReportStatus(p.nc, e.GetWorkflowJob().GetRunnerName(), backend.StatusStopping, providers.EventKey(e))
 
 	parts := strings.Split(e.GetWorkflowJob().GetRunnerName(), "-")
 	instanceID, err := strconv.Atoi(parts[len(parts)-1])
@@ -174,6 +185,8 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 
 	sts2, _ := p.Status()
 	_ = providers.SendMail(providers.Shut, instanceID, sts2)
+
+	backend.ReportStatus(p.nc, e.GetWorkflowJob().GetRunnerName(), backend.StatusStopped, providers.EventKey(e))
 
 	return nil
 }

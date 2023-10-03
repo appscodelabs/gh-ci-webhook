@@ -20,6 +20,7 @@ import (
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
 	"github.com/google/go-github/v55/github"
+	"github.com/nats-io/nats.go"
 )
 
 type impl struct{}
@@ -34,7 +35,7 @@ func (_ impl) Name() string {
 	return "dummy"
 }
 
-func (_ impl) Init() error {
+func (_ impl) Init(nc *nats.Conn) error {
 	return nil
 }
 

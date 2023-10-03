@@ -21,11 +21,12 @@ import (
 	"sync"
 
 	"github.com/google/go-github/v55/github"
+	"github.com/nats-io/nats.go"
 )
 
 type Interface interface {
 	Name() string
-	Init() error
+	Init(nc *nats.Conn) error
 	Next() (any, bool)
 	Done(any)
 	StartRunner(any) error
