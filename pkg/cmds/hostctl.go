@@ -66,7 +66,7 @@ func NewCmdHostctl(ctx context.Context) *cobra.Command {
 			firecracker.DefaultOptions.NatsPassword = natsPassword
 
 			// For testing
-			firecracker.DefaultOptions.NumInstances = 1
+			// firecracker.DefaultOptions.NumInstances = 1
 
 			var err error
 			nc, err = backend.NewConnection(ncOpts.Addr, ncOpts.CredFile)
