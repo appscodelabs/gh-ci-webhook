@@ -48,7 +48,7 @@ func (_ impl) StopRunner(e *github.WorkflowJobEvent) error {
 	return nil
 }
 
-func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) error {
+func (_ impl) StartRunner(_ any) error {
 	return nil
 }
 

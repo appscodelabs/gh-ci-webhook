@@ -96,16 +96,16 @@ func (p impl) Done(slot any) {
 	p.ins.Free(ins.ID)
 }
 
-func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
-	klog.Infoln("Starting VM for", providers.EventKey(e))
-
+func (p impl) StartRunner(slot any) error {
 	ins := slot.(*Instance)
 	if ins == nil {
 		return nil
 	}
 
+	klog.Infoln("Starting VM for", ins.ID)
+
 	sts, _ := p.Status()
-	_ = providers.SendMail(providers.Starting, ins.ID, sts, e)
+	_ = providers.SendMail(providers.Starting, ins.ID, sts)
 
 	wfRootFSPath := WorkflowRunRootFSPath(ins.UID)
 	wfDir := filepath.Dir(wfRootFSPath)
@@ -138,7 +138,7 @@ func (p impl) StartRunner(slot any, e *github.WorkflowJobEvent) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	ins.cancel = cancel
-	return p.createVM(ctx, ins, socketPath, e)
+	return p.createVM(ctx, ins, socketPath)
 }
 
 func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
@@ -150,18 +150,20 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 		return err
 	}
 
-	// optimize rootfs copy
-	cpfs := fmt.Sprintf("%s-%d", DefaultOptions.RootFSPath(), instanceID)
-	klog.InfoS("copying rootfs", "path", cpfs)
-	// cp command runs faster than CopyFile
-	err = sh.Command("cp", DefaultOptions.RootFSPath(), cpfs).Run()
-	// err = ioutil.CopyFile(cpfs, DefaultOptions.RootFSPath())
-	if err != nil {
-		return err
-	}
+	/*
+		// optimize rootfs copy
+		cpfs := fmt.Sprintf("%s-%d", DefaultOptions.RootFSPath(), instanceID)
+		klog.InfoS("copying rootfs", "path", cpfs)
+		// cp command runs faster than CopyFile
+		err = sh.Command("cp", DefaultOptions.RootFSPath(), cpfs).Run()
+		// err = ioutil.CopyFile(cpfs, DefaultOptions.RootFSPath())
+		if err != nil {
+			return err
+		}
+	*/
 
 	sts, _ := p.Status()
-	_ = providers.SendMail(providers.Shutting, instanceID, sts, e)
+	_ = providers.SendMail(providers.Shutting, instanceID, sts)
 
 	p.ins.Free(instanceID)
 
@@ -171,7 +173,7 @@ func (p impl) StopRunner(e *github.WorkflowJobEvent) error {
 	_ = TapDelete(tap1)
 
 	sts2, _ := p.Status()
-	_ = providers.SendMail(providers.Shut, instanceID, sts2, e)
+	_ = providers.SendMail(providers.Shut, instanceID, sts2)
 
 	return nil
 }

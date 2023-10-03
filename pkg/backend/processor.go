@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -31,12 +30,15 @@ import (
 	"github.com/gomodules/agecache"
 	"github.com/google/go-github/v55/github"
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/pkg/errors"
-	"github.com/zeebo/xxh3"
 	"k8s.io/klog/v2"
 )
 
-const runnerLabel = "firecracker"
+const (
+	RunnerRegular = "firecracker"
+	RunnerHigh    = "high"
+)
 
 var (
 	actionsBillingCache     *agecache.Cache
@@ -56,7 +58,7 @@ func initCache(gh *github.Client) {
 	})
 }
 
-func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines uint64, r *http.Request, secretToken []byte) error {
+func SubmitPayload(gh *github.Client, nc *nats.Conn, r *http.Request, secretToken []byte) error {
 	initCache(gh)
 
 	eventType := github.WebHookType(r)
@@ -80,29 +82,15 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines 
 	var subj string
 	if action == "completed" && e.GetWorkflowJob().GetRunnerGroupName() == "Default" {
 		parts := strings.Split(e.GetWorkflowJob().GetRunnerName(), "-")
-		if len(parts) != 3 {
-			return fmt.Errorf("invalid runner name %s for %s", e.GetWorkflowJob().GetRunnerName(), providers.EventKey(e))
-		}
-		machineID, err := strconv.Atoi(parts[1])
-		if err != nil {
-			return errors.Wrapf(err, "failed to detect machine id from runner name %s for %s", e.GetWorkflowJob().GetRunnerName(), providers.EventKey(e))
-		}
-
-		subj = fmt.Sprintf("%s.machines.%s.%d",
-			stream,
-			e.WorkflowJob.GetStatus(),
-			machineID,
+		subj = fmt.Sprintf("%scompleted.machines.%s",
+			StreamPrefix,
+			strings.Join(parts[:len(parts)-1], "-"),
 		)
-	} else if action == "queued" && runsOnSelfHosted(e) {
-		//} else if action == "queued" && (runsOnSelfHosted(e) ||
-		//	(e.GetRepo().GetPrivate() && mustUsedUpFreeMinutes(actionsBillingCache.Get(e.GetOrg().GetLogin())))) {
-		h := xxh3.New()
-		_, _ = h.WriteString(providers.EventKey(e))
-		subj = fmt.Sprintf("%s.machines.%s.%d",
-			stream,
-			e.WorkflowJob.GetStatus(),
-			h.Sum64()%numMachines,
-		)
+	} else if action == "queued" {
+		label, selfHosted := runsOnSelfHosted(e)
+		if selfHosted {
+			subj = fmt.Sprintf("%squeued.%s", StreamPrefix, label)
+		}
 	}
 
 	if subj != "" {
@@ -110,11 +98,19 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, stream string, numMachines 
 		buf.WriteString(eventType)
 		buf.WriteRune(':')
 		buf.Write(payload)
-		_, err = nc.Request(subj, buf.Bytes(), NatsRequestTimeout)
+
+		js, err := jetstream.New(nc)
+		if err != nil {
+			return err
+		}
+
+		// TODO: use jetstream.Publish
+		_, err = js.Publish(context.TODO(), subj, buf.Bytes())
 		if err != nil {
 			return errors.Wrap(err, "failed to store e in NATS")
+		} else {
+			klog.Infoln("submitted job for", providers.EventKey(e))
 		}
-		klog.Infoln("submitted job for", providers.EventKey(e))
 	}
 	return nil
 }
@@ -123,7 +119,7 @@ func DefaultJobLabel(gh *github.Client, org string, private bool) string {
 	initCache(gh)
 
 	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
-		return runnerLabel
+		return RunnerRegular
 	}
 	return "ubuntu-20.04"
 }
@@ -143,23 +139,12 @@ func mustUsedUpFreeMinutes(used interface{}, err error) bool {
 	return used.(bool)
 }
 
-func runsOnSelfHosted(e *github.WorkflowJobEvent) bool {
-	return len(e.GetWorkflowJob().Labels) == 1 && e.GetWorkflowJob().Labels[0] == runnerLabel
-}
-
-func (mgr *Manager) ProcessQueuedMsg(slot any, payload []byte) (*github.WorkflowJobEvent, error) {
-	eventType, payload, found := bytes.Cut(payload, []byte(":"))
-	if !found {
-		return nil, errors.New("invalid payload format")
+func runsOnSelfHosted(e *github.WorkflowJobEvent) (string, bool) {
+	if len(e.GetWorkflowJob().Labels) != 1 {
+		return "", false
 	}
-
-	event, err := github.ParseWebHook(string(eventType), payload)
-	if err != nil {
-		return nil, err
-	}
-	e := event.(*github.WorkflowJobEvent)
-
-	return e, mgr.Provider.StartRunner(slot, e)
+	label := e.GetWorkflowJob().Labels[0]
+	return label, label == RunnerHigh || label == RunnerRegular
 }
 
 func (mgr *Manager) ProcessCompletedMsg(payload []byte) (*github.WorkflowJobEvent, error) {

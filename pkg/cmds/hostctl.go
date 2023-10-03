@@ -50,6 +50,24 @@ func NewCmdHostctl(ctx context.Context) *cobra.Command {
 			linode.DefaultOptions.GitHubToken = ghToken
 			firecracker.DefaultOptions.GitHubToken = ghToken
 
+			var natsUsername, natsPassword string
+			if v, ok := os.LookupEnv("NATS_USERNAME"); ok {
+				natsUsername = v
+			} else {
+				natsUsername = os.Getenv("THIS_IS_NATS_USERNAME")
+			}
+			if v, ok := os.LookupEnv("NATS_PASSWORD"); ok {
+				natsPassword = v
+			} else {
+				natsPassword = os.Getenv("THIS_IS_NATS_PASSWORD")
+			}
+			firecracker.DefaultOptions.NatsURL = ncOpts.Addr
+			firecracker.DefaultOptions.NatsUsername = natsUsername
+			firecracker.DefaultOptions.NatsPassword = natsPassword
+
+			// For testing
+			firecracker.DefaultOptions.NumInstances = 1
+
 			var err error
 			nc, err = backend.NewConnection(ncOpts.Addr, ncOpts.CredFile)
 			if err != nil {

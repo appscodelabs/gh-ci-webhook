@@ -22,11 +22,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/appscodelabs/gh-ci-webhook/pkg/backend"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
 	"github.com/google/go-github/v55/github"
 	"github.com/linode/linodego"
 	"golang.org/x/oauth2"
+	passgen "gomodules.xyz/password-generator"
 	"gomodules.xyz/pointer"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
@@ -54,7 +56,7 @@ func (_ impl) Init() error {
 }
 
 func (_ impl) Next() (any, bool) {
-	return nil, true
+	return nil, false
 }
 
 func (_ impl) Done(slot any) {}
@@ -91,14 +93,14 @@ func (_ impl) StopRunner(e *github.WorkflowJobEvent) error {
 	return nil
 }
 
-func (_ impl) StartRunner(_ any, e *github.WorkflowJobEvent) error {
+func (_ impl) StartRunner(_ any) error {
 	c := NewClient()
 
-	machineName := fmt.Sprintf("%s-%s-%d", e.Org.GetLogin(), e.Repo.GetName(), e.GetWorkflowJob().GetID())
+	machineName := fmt.Sprintf("%s%s", backend.StreamPrefix, passgen.GenerateForCharset(6, passgen.AlphaNum))
 	fmt.Println(machineName)
 
 	// machineName := "gh-runner-" + passgen.Generate(6)
-	id, err := createInstance(c, machineName, fmt.Sprintf("%s/%s", e.Org.GetLogin(), e.Repo.GetName()))
+	id, err := createInstance(c, machineName)
 	if err != nil {
 		return err
 	}
@@ -119,7 +121,7 @@ func NewClient() *linodego.Client {
 	return &c
 }
 
-func createInstance(c *linodego.Client, machineName, runnerOwner string) (int, error) {
+func createInstance(c *linodego.Client, machineName string) (int, error) {
 	sshKeys, err := c.ListSSHKeys(context.Background(), &linodego.ListOptions{})
 	if err != nil {
 		return 0, err
@@ -137,8 +139,8 @@ func createInstance(c *linodego.Client, machineName, runnerOwner string) (int, e
 		AuthorizedKeys: authorizedKeys,
 		StackScriptData: map[string]string{
 			"runner_cfg_pat": DefaultOptions.GitHubToken,
-			"runner_owner":   runnerOwner,
-			"runner_name":    machineName,
+			// "runner_owner":   runnerOwner,
+			"runner_name": machineName,
 		},
 		StackScriptID:  DefaultOptions.StackScriptID,
 		Image:          DefaultOptions.Image,

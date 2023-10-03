@@ -37,6 +37,7 @@ import (
 	"golang.org/x/oauth2"
 	shell "gomodules.xyz/go-sh"
 	passgen "gomodules.xyz/password-generator"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -46,15 +47,12 @@ var (
 	hosts       = []string{"this-is-nats.appscode.ninja"}
 	port        = 8080
 	enableSSL   bool
-	queueLength = 100
 )
 
 func NewCmdRun(ctx context.Context) *cobra.Command {
 	var (
-		ghToken            = os.Getenv("GITHUB_TOKEN")
-		ncOpts             = backend.NewNATSOptions()
-		stream             = backend.StreamName
-		numMachines uint64 = 1
+		ghToken = os.Getenv("GITHUB_TOKEN")
+		ncOpts  = backend.NewNATSOptions()
 
 		nc *nats.Conn
 	)
@@ -70,10 +68,14 @@ func NewCmdRun(ctx context.Context) *cobra.Command {
 			}
 			defer nc.Drain() //nolint:errcheck
 
+			sp, err := backend.NewStatusReporter(nc)
+			if err != nil {
+				return err
+			}
+
 			opts := backend.DefaultOptions()
-			opts.Stream = stream
 			mgr := backend.New(nc, opts)
-			if _, err = mgr.EnsureStream(); err != nil {
+			if err = mgr.EnsureStreams(); err != nil {
 				return err
 			}
 
@@ -89,7 +91,7 @@ func NewCmdRun(ctx context.Context) *cobra.Command {
 
 			gh := github.NewClient(tc)
 
-			return runServer(gh, nc, stream, numMachines)
+			return runServer(gh, nc, sp)
 		},
 	}
 
@@ -100,9 +102,6 @@ func NewCmdRun(ctx context.Context) *cobra.Command {
 	cmd.Flags().StringSliceVar(&hosts, "hosts", hosts, "Hosts for which certificate will be issued")
 	cmd.Flags().IntVar(&port, "port", port, "Port used when SSL is not enabled")
 	cmd.Flags().BoolVar(&enableSSL, "ssl", enableSSL, "Set true to enable SSL via Let's Encrypt")
-	cmd.Flags().IntVar(&queueLength, "queue-length", queueLength, "Length of queue used to hold pr events")
-	cmd.Flags().StringVar(&stream, "stream", stream, "Name of Jetstream")
-	cmd.Flags().Uint64Var(&numMachines, "num-machines", numMachines, "Number of machines")
 
 	ncOpts.AddFlags(cmd.Flags())
 
@@ -119,7 +118,7 @@ type Response struct {
 	TLS     *tls.ConnectionState `json:"tls,omitempty"`
 }
 
-func runServer(gh *github.Client, nc *nats.Conn, stream string, numMachines uint64) error {
+func runServer(gh *github.Client, nc *nats.Conn, sp *backend.StatusReporter) error {
 	sh := shell.NewSession()
 	sh.ShowCMD = true
 	sh.PipeFail = true
@@ -136,6 +135,11 @@ func runServer(gh *github.Client, nc *nats.Conn, stream string, numMachines uint
 		label := backend.DefaultJobLabel(gh, org, private)
 		_, _ = w.Write([]byte(label))
 	})
+
+	r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write(sp.Render())
+	})
+
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		resp := &Response{
 			Type:    "http",
@@ -150,8 +154,9 @@ func runServer(gh *github.Client, nc *nats.Conn, stream string, numMachines uint
 		_ = enc.Encode(resp)
 	})
 	r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
-		err := backend.SubmitPayload(gh, nc, stream, numMachines, r, []byte(secretToken))
+		err := backend.SubmitPayload(gh, nc, r, []byte(secretToken))
 		if err != nil {
+			klog.Errorln(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

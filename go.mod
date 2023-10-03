@@ -12,12 +12,12 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.3
 	github.com/linode/linodego v1.22.0
 	github.com/nats-io/nats.go v1.30.0
+	github.com/olekukonko/tablewriter v0.0.6-0.20230925090304-df64c4bbad77
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230206183746-70ca0345eede
-	github.com/zeebo/xxh3 v1.0.2
 	gocloud.dev v0.28.0
 	golang.org/x/crypto v0.13.0
 	golang.org/x/oauth2 v0.7.0
@@ -28,7 +28,6 @@ require (
 	gomodules.xyz/password-generator v0.2.9
 	gomodules.xyz/pointer v0.1.0
 	gomodules.xyz/signals v0.2.0
-	gomodules.xyz/wait v0.2.0
 	gomodules.xyz/x v0.0.15
 	google.golang.org/grpc v1.51.0
 	k8s.io/apimachinery v0.25.3
@@ -87,6 +86,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -99,6 +99,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
+	github.com/rivo/uniseg v0.1.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f // indirect
@@ -114,6 +115,7 @@ require (
 	gomodules.xyz/flags v0.1.3 // indirect
 	gomodules.xyz/gdrive-utils v0.0.2 // indirect
 	gomodules.xyz/sets v0.2.1 // indirect
+	gomodules.xyz/wait v0.2.0 // indirect
 	google.golang.org/api v0.103.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221201204527-e3fa12d562f3 // indirect
@@ -140,9 +142,5 @@ replace (
 	go.opentelemetry.io/otel/trace => go.opentelemetry.io/otel/trace v0.20.0
 	go.opentelemetry.io/proto/otlp => go.opentelemetry.io/proto/otlp v0.7.0
 )
-
-replace helm.sh/helm/v3 => github.com/kubepack/helm/v3 v3.9.1-0.20220603235400-7882cd0f0948
-
-replace sigs.k8s.io/application => github.com/kmodules/application v0.8.4-0.20220603221517-a62565381f64
 
 replace github.com/firecracker-microvm/firecracker-go-sdk => github.com/tamalsaha/firecracker-go-sdk v0.0.0-20221030105818-38ad677bca8b

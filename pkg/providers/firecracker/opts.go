@@ -41,6 +41,10 @@ type Options struct {
 	MemSizeMib int64
 
 	GitHubToken string
+
+	NatsURL      string
+	NatsUsername string
+	NatsPassword string
 }
 
 var DefaultOptions = NewOptions()

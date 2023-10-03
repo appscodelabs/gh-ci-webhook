@@ -23,7 +23,6 @@ import (
 
 	sdk "github.com/firecracker-microvm/firecracker-go-sdk"
 	"github.com/firecracker-microvm/firecracker-go-sdk/client/models"
-	"github.com/google/go-github/v55/github"
 	. "github.com/klauspost/cpuid/v2"
 	log "github.com/sirupsen/logrus"
 	"gomodules.xyz/pointer"
@@ -83,7 +82,7 @@ func createNewConfig(ins *Instance, socketPath string, opts ...configOpt) sdk.Co
 	return cfg
 }
 
-func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e *github.WorkflowJobEvent) error {
+func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string) error {
 	egressIface, err := GetEgressInterface()
 	if err != nil {
 		return err
@@ -213,8 +212,8 @@ func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e 
 		})
 
 		// Set Metadata
-		ghRepo := e.GetRepo().GetOwner().GetLogin() + "/" + e.GetRepo().GetName()
-		mmds, err := BuildData(ghRepo, DefaultOptions.GitHubToken, ins.ID, "tamalsaha")
+		// ghRepo := e.GetRepo().GetOwner().GetLogin() + "/" + e.GetRepo().GetName()
+		mmds, err := BuildData(DefaultOptions.GitHubToken, ins.ID, "tamalsaha")
 		if err != nil {
 			return err
 		}
@@ -240,7 +239,7 @@ func (p impl) createVM(ctx context.Context, ins *Instance, socketPath string, e 
 		}()
 
 		sts, _ := p.Status()
-		_ = providers.SendMail(providers.Started, ins.ID, sts, e)
+		_ = providers.SendMail(providers.Started, ins.ID, sts)
 
 		// wait for the VMM to exit
 		if err := m.Wait(ctx); err != nil {

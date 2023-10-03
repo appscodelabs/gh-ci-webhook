@@ -18,11 +18,9 @@ package providers
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os"
 
-	"github.com/google/go-github/v55/github"
 	"gomodules.xyz/mailer"
 )
 
@@ -35,7 +33,7 @@ const (
 	Shut
 )
 
-func SendMail(mt MailType, id int, status []byte, e *github.WorkflowJobEvent) error {
+func SendMail(mt MailType, id int, status []byte) error {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return err
@@ -45,24 +43,19 @@ func SendMail(mt MailType, id int, status []byte, e *github.WorkflowJobEvent) er
 	var sub string
 	switch mt {
 	case Starting:
-		sub = fmt.Sprintf("Starting VM %s for %s", vmName, EventKey(e))
+		sub = fmt.Sprintf("Starting VM %s", vmName)
 	case Started:
-		sub = fmt.Sprintf("Started VM %s for %s", vmName, EventKey(e))
+		sub = fmt.Sprintf("Started VM %s", vmName)
 	case Shutting:
-		sub = fmt.Sprintf("Shutting VM %s for %s", vmName, EventKey(e))
+		sub = fmt.Sprintf("Shutting VM %s", vmName)
 	case Shut:
-		sub = fmt.Sprintf("Shut VM %s for %s", vmName, EventKey(e))
+		sub = fmt.Sprintf("Shut down VM %s", vmName)
 	}
 
 	var buf bytes.Buffer
 	buf.WriteString("**Status:**\n")
 	buf.WriteString("```\n")
 	buf.Write(status)
-	buf.WriteString("\n```\n")
-	buf.WriteString("**Event:**\n")
-	buf.WriteString("```\n")
-	ed, _ := json.MarshalIndent(e, "", "  ")
-	buf.Write(ed)
 	buf.WriteString("\n```\n")
 
 	const email = "tamal+gh-ci-hostctl@appscode.com"
