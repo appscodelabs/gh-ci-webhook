@@ -39,18 +39,9 @@ func (opts *NATSOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&opts.CredFile, "nats-credential-file", opts.CredFile, "PATH to NATS credential file")
 }
 
-const (
-	StreamName = "ghactions"
-)
-
 type Options struct {
 	AckWait time.Duration
 
-	// same as stream
-	Stream string
-
-	// manager id, < 0 means auto detect
-	MachineID int
 	// hostname
 	Name       string
 	NumWorkers int
@@ -59,8 +50,6 @@ type Options struct {
 }
 
 func (opts *Options) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&opts.Stream, "stream", opts.Stream, "Name of Jetstream")
-	fs.IntVar(&opts.MachineID, "machine-id", opts.MachineID, "Machine ID")
 	fs.StringVar(&opts.Provider, "provider", opts.Provider, "Name of runner provider (linode, firecracker)")
 }
 
@@ -69,8 +58,6 @@ func DefaultOptions() Options {
 
 	return Options{
 		AckWait:    1 * time.Hour,
-		Stream:     StreamName,
-		MachineID:  -1,
 		Name:       hostname,
 		NumWorkers: 1, // MUST be 1
 	}

@@ -28,7 +28,7 @@ type Interface interface {
 	Init() error
 	Next() (any, bool)
 	Done(any)
-	StartRunner(any, *github.WorkflowJobEvent) error
+	StartRunner(any) error
 	StopRunner(*github.WorkflowJobEvent) error
 	Status() ([]byte, error)
 }

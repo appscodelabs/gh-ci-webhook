@@ -38,6 +38,7 @@ func NewRootCmd() *cobra.Command {
 
 	rootCmd.AddCommand(NewCmdRun(ctx))
 	rootCmd.AddCommand(NewCmdHostctl(ctx))
+	rootCmd.AddCommand(NewCmdWaitForJob())
 	rootCmd.AddCommand(NewCmdFirecracker())
 	rootCmd.AddCommand(v.NewCmdVersion())
 	return rootCmd

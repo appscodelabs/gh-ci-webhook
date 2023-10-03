@@ -30,6 +30,8 @@ const (
 	NatsConnectionTimeout       = 350 * time.Millisecond
 	NatsConnectionRetryInterval = 100 * time.Millisecond
 	NatsRequestTimeout          = 10 * time.Second
+
+	StreamPrefix = "gha_"
 )
 
 // NewConnection creates a new NATS connection
@@ -83,7 +85,7 @@ func NewConnection(addr, credFile string) (nc *nats.Conn, err error) {
 			if err == nil {
 				return nc, nil
 			}
-			klog.V(5).InfoS("failed to connect to event receiver", "error", err)
+			klog.InfoS("failed to connect to event receiver", "error", err)
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		}
@@ -93,22 +95,22 @@ func NewConnection(addr, credFile string) (nc *nats.Conn, err error) {
 // called during errors subscriptions etc
 func errorHandler(nc *nats.Conn, s *nats.Subscription, err error) {
 	if s != nil {
-		klog.V(5).Infof("error in event receiver connection: %s: subscription: %s: %s", nc.ConnectedUrl(), s.Subject, err)
+		klog.Infof("error in event receiver connection: %s: subscription: %s: %s", nc.ConnectedUrl(), s.Subject, err)
 		return
 	}
-	klog.V(5).Infof("Error in event receiver connection: %s: %s", nc.ConnectedUrl(), err)
+	klog.Infof("Error in event receiver connection: %s: %s", nc.ConnectedUrl(), err)
 }
 
 // called after reconnection
 func reconnectHandler(nc *nats.Conn) {
-	klog.V(5).Infof("Reconnected to %s", nc.ConnectedUrl())
+	klog.Infof("Reconnected to %s", nc.ConnectedUrl())
 }
 
 // called after disconnection
 func disconnectHandler(nc *nats.Conn, err error) {
 	if err != nil {
-		klog.V(5).Infof("Disconnected from event receiver due to error: %v", err)
+		klog.Infof("Disconnected from event receiver due to error: %v", err)
 	} else {
-		klog.V(5).Infof("Disconnected from event receiver")
+		klog.Infof("Disconnected from event receiver")
 	}
 }
