@@ -144,7 +144,7 @@ func ReportStatus(nc *nats.Conn, name string, s Status, comments ...string) {
 	if len(comments) > 0 {
 		fields = append(fields, comments[0])
 	}
-	err := nc.Publish(subStatus, []byte(strings.Join(fields, ",")))
+	_, err := nc.Request(subStatus, []byte(strings.Join(fields, ",")), NatsRequestTimeout)
 	if err != nil {
 		klog.Errorln(err)
 	}
