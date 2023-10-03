@@ -237,7 +237,7 @@ export RUNNER_NAME=%s
 # curl -s https://raw.githubusercontent.com/actions/runner/main/scripts/create-latest-svc.sh | bash -s -- -s ${RUNNER_OWNER} -n ${RUNNER_NAME} -f
 # ephemeral runner: https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#using-ephemeral-runners-for-autoscaling
 # https://github.blog/changelog/2021-09-20-github-actions-ephemeral-self-hosted-runners-new-webhooks-for-auto-scaling/
-curl -fsSL https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/49e6cbdd461afe4cff930e2a5323507827b7718a/start-runner.sh | bash -s -- -n ${RUNNER_NAME} -l firecracker -f
+curl -fsSL https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/4e6cff5d2a391d1b625e72a1cc15ff6560d5863c/start-runner.sh | bash -s -- -n ${RUNNER_NAME} -l firecracker -f
 `, DefaultOptions.NatsURL, DefaultOptions.NatsUsername, DefaultOptions.NatsPassword, ghToken, runnerName)
 
 	udBytes, err := PrepareCloudInitUserData(userData, script)
