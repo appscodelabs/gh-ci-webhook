@@ -100,6 +100,61 @@ func (mgr *Manager) ProcessCompletedJobs() error {
 		return err
 	}
 
+	go func() {
+		for {
+			err := mgr.onerun(subj)
+			if err != nil {
+				klog.Errorln(err)
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}()
+	return nil
+}
+
+func (mgr *Manager) onerun(subj string) error {
+	ctx := context.TODO()
+	cons, err := mgr.streamCompleted.CreateOrUpdateConsumer(ctx, jetstream.ConsumerConfig{
+		FilterSubject: subj,
+	})
+	if err != nil {
+		return err
+	}
+	defer mgr.streamCompleted.DeleteConsumer(ctx, cons.CachedInfo().Name)
+
+	// FetchNoWait will not wait for new messages if the whole batch is not available at the time of sending request.
+	msgs, err := cons.FetchNoWait(mgr.numWorkers)
+	if err != nil {
+		return err
+	}
+	for m2 := range msgs.Messages() {
+		go func(msg jetstream.Msg) {
+			_, err = mgr.ProcessCompletedMsg(msg.Data())
+			if err != nil {
+				klog.Errorln(err)
+			}
+			msg.DoubleAck(context.TODO())
+
+			if slot, found := mgr.Provider.Next(); found {
+				err := mgr.Provider.StartRunner(slot) // Not 1-1 mapping for the VM shut down to restarted
+				if err != nil {
+					klog.Errorln(err)
+				}
+			}
+		}(m2)
+	}
+	return msgs.Error()
+}
+
+// This did not work. Consumers seem to get disconnected.
+func (mgr *Manager) ProcessCompletedJobs__() error {
+	subj := fmt.Sprintf("%scompleted.machines.%s", StreamPrefix, mgr.name)
+
+	err := mgr.streamCompleted.Purge(context.TODO(), jetstream.WithPurgeSubject(subj))
+	if err != nil {
+		return err
+	}
+
 	cons, err := mgr.streamCompleted.CreateOrUpdateConsumer(context.TODO(), jetstream.ConsumerConfig{
 		Durable:       mgr.name,
 		FilterSubject: subj,
