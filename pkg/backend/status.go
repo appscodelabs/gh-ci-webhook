@@ -199,7 +199,7 @@ func (sp *StatusReporter) GenerateMarkdownReport() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (sp *StatusReporter) GenerateHTMLReport() ([]byte, error) {
+func (sp *StatusReporter) GenerateHTMLReport() (string, error) {
 	md := goldmark.New(
 		goldmark.WithExtensions(extension.GFM),
 		goldmark.WithParserOptions(
@@ -213,14 +213,26 @@ func (sp *StatusReporter) GenerateHTMLReport() ([]byte, error) {
 
 	data, err := sp.GenerateMarkdownReport()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	var bufHtml bytes.Buffer
-	if err := md.Convert(data, &bufHtml); err != nil {
-		return nil, err
+	var bodyHtml bytes.Buffer
+	if err := md.Convert(data, &bodyHtml); err != nil {
+		return "", err
 	}
-	return bufHtml.Bytes(), nil
+
+	return fmt.Sprintf(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="refresh" content="30">
+  </head>
+  <body>
+  %s
+  </body>
+</html>`, bodyHtml.String()), nil
 }
 
 func CollectStreamInfo(nc *nats.Conn, names []string) ([]*jetstream.StreamInfo, error) {
