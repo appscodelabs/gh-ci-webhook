@@ -82,7 +82,7 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, r *http.Request, secretToke
 	var subj string
 	if action == "completed" && e.GetWorkflowJob().GetRunnerGroupName() == "Default" {
 		parts := strings.Split(e.GetWorkflowJob().GetRunnerName(), "-")
-		subj = fmt.Sprintf("%scompleted.machines.%s",
+		subj = fmt.Sprintf("%scompleted.%s",
 			StreamPrefix,
 			strings.Join(parts[:len(parts)-1], "-"),
 		)
@@ -104,12 +104,11 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, r *http.Request, secretToke
 			return err
 		}
 
-		// TODO: use jetstream.Publish
 		_, err = js.Publish(context.TODO(), subj, buf.Bytes())
 		if err != nil {
-			return errors.Wrap(err, "failed to store e in NATS")
+			return errors.Wrapf(err, "failed to store event %s in NATS", providers.EventKey(e))
 		} else {
-			klog.Infoln("submitted job for", providers.EventKey(e))
+			klog.Infof("%s: submitted job for %s", subj, providers.EventKey(e))
 		}
 	}
 	return nil
@@ -158,6 +157,7 @@ func (mgr *Manager) ProcessCompletedMsg(payload []byte) (*github.WorkflowJobEven
 		return nil, err
 	}
 	e := event.(*github.WorkflowJobEvent)
+	klog.Infof("COMPLETED: %s", providers.EventKey(e))
 
 	return e, mgr.Provider.StopRunner(e)
 }

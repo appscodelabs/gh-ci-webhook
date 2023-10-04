@@ -92,8 +92,8 @@ func (mgr *Manager) RunVMs() {
 	}
 }
 
-func (mgr *Manager) ProcessCompletedJobs() error {
-	subj := fmt.Sprintf("%scompleted.machines.%s", StreamPrefix, mgr.name)
+func (mgr *Manager) ProcessCompletedJobs__() error {
+	subj := fmt.Sprintf("%scompleted.%s", StreamPrefix, mgr.name)
 
 	err := mgr.streamCompleted.Purge(context.TODO(), jetstream.WithPurgeSubject(subj))
 	if err != nil {
@@ -147,9 +147,8 @@ func (mgr *Manager) onerun(subj string) error {
 	return msgs.Error()
 }
 
-// This did not work. Consumers seem to get disconnected.
-func (mgr *Manager) ProcessCompletedJobs__() error {
-	subj := fmt.Sprintf("%scompleted.machines.%s", StreamPrefix, mgr.name)
+func (mgr *Manager) ProcessCompletedJobs() error {
+	subj := fmt.Sprintf("%scompleted.%s", StreamPrefix, mgr.name)
 
 	err := mgr.streamCompleted.Purge(context.TODO(), jetstream.WithPurgeSubject(subj))
 	if err != nil {
@@ -181,7 +180,7 @@ func (mgr *Manager) ProcessCompletedJobs__() error {
 				msg, err := iter.Next()
 				if err != nil {
 					// handle err
-					klog.Errorln(err)
+					klog.ErrorS(err, "failed to parse completed job message")
 					return
 				}
 				// fmt.Printf("Processing msg: %s\n", string(msg.Data()))
@@ -232,7 +231,7 @@ func (mgr *Manager) ensureStream(stream string, jsOpts ...jetstream.JetStreamOpt
 	if errors.Is(err, jetstream.ErrStreamNotFound) {
 		s, err = js.CreateStream(context.TODO(), jetstream.StreamConfig{
 			Name:     stream,
-			Subjects: []string{stream + ".>"},
+			Subjects: []string{stream + ".*"},
 			// https://docs.nats.io/nats-concepts/core-nats/queue#stream-as-a-queue
 			Retention:  jetstream.WorkQueuePolicy,
 			MaxMsgs:    -1,
