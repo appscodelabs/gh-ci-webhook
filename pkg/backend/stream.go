@@ -191,30 +191,3 @@ func (mgr *Manager) ensureStream(stream string, jsOpts ...jetstream.JetStreamOpt
 	}
 	return s, err
 }
-
-/*
-func (mgr *Manager) addConsumer(jsm nats.JetStreamContext, status string) error {
-	ackPolicy := nats.AckExplicitPolicy
-	_, err := jsm.AddConsumer(mgr.streamPrefix, &nats.ConsumerConfig{
-		Durable:   fmt.Sprintf("%s-%d", status, mgr.MachineID),
-		AckPolicy: ackPolicy,
-		AckWait:   mgr.ackWait, // TODO: max for any task type
-		// The number of pulls that can be outstanding on a pull consumer, pulls received after this is reached are ignored
-		MaxWaiting: 1,
-		// max working set
-		MaxAckPending: 2 * mgr.numWorkers, // one for each status
-		// one request per worker
-		MaxRequestBatch: 1,
-		// max_expires the max amount of time that a pull request with an expires should be allowed to remain active
-		// MaxRequestExpires: 1 * time.Second,
-		DeliverPolicy: nats.DeliverAllPolicy,
-		MaxDeliver:    5,
-		FilterSubject: fmt.Sprintf("%s.machines.%s.%d", mgr.streamPrefix, status, mgr.MachineID),
-		ReplayPolicy:  nats.ReplayInstantPolicy,
-	})
-	if err != nil && !strings.Contains(err.Error(), "nats: consumer name already in use") {
-		return err
-	}
-	return nil
-}
-*/
