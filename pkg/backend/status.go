@@ -171,8 +171,7 @@ func ReportStatus(nc *nats.Conn, name string, s Status, comments ...string) {
 func (sp *StatusReporter) GenerateMarkdownReport() ([]byte, error) {
 	var buf bytes.Buffer
 
-	buf.WriteString("## Runners")
-	buf.WriteRune('\n')
+	buf.WriteString("## Runners\n\n")
 	buf.Write(sp.renderRunnerInfo())
 	buf.WriteRune('\n')
 
@@ -184,8 +183,7 @@ func (sp *StatusReporter) GenerateMarkdownReport() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	buf.WriteString("## Streams")
-	buf.WriteRune('\n')
+	buf.WriteString("## Streams\n\n")
 	buf.Write(RenderStreamInfo(streams))
 	buf.WriteRune('\n')
 
@@ -194,8 +192,7 @@ func (sp *StatusReporter) GenerateMarkdownReport() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		buf.WriteString(fmt.Sprintf("## Consumers for Stream: %s\n", name))
-		buf.WriteRune('\n')
+		buf.WriteString(fmt.Sprintf("## Consumers for Stream: %s\n\n", name))
 		buf.Write(RenderConsumerInfo(consumers))
 		buf.WriteRune('\n')
 	}

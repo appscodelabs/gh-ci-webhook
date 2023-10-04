@@ -137,7 +137,7 @@ func runServer(gh *github.Client, nc *nats.Conn, sp *backend.StatusReporter) err
 	})
 
 	r.Get("/runner-status", func(w http.ResponseWriter, r *http.Request) {
-		data, err := sp.GenerateHTMLReport()
+		data, err := sp.GenerateMarkdownReport()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
