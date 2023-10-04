@@ -103,16 +103,19 @@ func (sp *StatusReporter) setStatus(msg []byte) {
 	sp.mu.Lock()
 	defer sp.mu.Unlock()
 
-	last, found := sp.inventory[cur.Name]
-	if !found || last.Status != cur.Status {
-		sp.inventory[cur.Name] = cur
-	} else {
-		cur.Timestamp = last.Timestamp
-		if cur.Comment == "" {
-			cur.Comment = last.Comment
+	sp.inventory[cur.Name] = cur
+	/*
+		last, found := sp.inventory[cur.Name]
+		if !found || last.Status != cur.Status {
+			sp.inventory[cur.Name] = cur
+		} else {
+			cur.Timestamp = last.Timestamp
+			if cur.Comment == "" {
+				cur.Comment = last.Comment
+			}
+			sp.inventory[cur.Name] = cur
 		}
-		sp.inventory[cur.Name] = cur
-	}
+	*/
 }
 
 func (sp *StatusReporter) renderRunnerInfo() []byte {
