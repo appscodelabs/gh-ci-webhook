@@ -137,7 +137,12 @@ func runServer(gh *github.Client, nc *nats.Conn, sp *backend.StatusReporter) err
 	})
 
 	r.Get("/runner-status", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write(sp.Render())
+		data, err := sp.GenerateHTMLReport()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		_, _ = w.Write(data)
 	})
 
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
