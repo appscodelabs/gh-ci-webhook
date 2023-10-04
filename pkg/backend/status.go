@@ -317,15 +317,12 @@ func RenderConsumerInfo(consumers []*jetstream.ConsumerInfo) []byte {
 	for _, s := range consumers {
 		data = append(data, []string{
 			s.Config.Name,
+			s.Config.Durable,
 			ConvertToHumanReadableDateType(&s.Created),
 			strconv.FormatBool(!s.PushBound),
 			s.Config.FilterSubject,
 			ConvertToHumanReadableDateType(s.Delivered.Last),
 			ConvertToHumanReadableDateType(s.AckFloor.Last),
-			strconv.Itoa(s.NumAckPending),
-			strconv.Itoa(s.NumRedelivered),
-			strconv.Itoa(s.NumWaiting),
-			strconv.FormatUint(s.NumPending, 10),
 		})
 	}
 	sort.Slice(data, func(i, j int) bool {
@@ -335,7 +332,7 @@ func RenderConsumerInfo(consumers []*jetstream.ConsumerInfo) []byte {
 	var buf bytes.Buffer
 
 	table := tablewriter.NewWriter(&buf)
-	table.SetHeader([]string{"Name", "Created", "Pull", "Filter Subject", "Last Delivery", "Last Ack", "NumAckPending", "NumRedelivered", "NumWaiting", "NumPending"})
+	table.SetHeader([]string{"Name", "Durable", "Created", "Pull", "Filter Subject", "Last Delivery", "Last Ack"})
 	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 	table.SetCenterSeparator("|")
 	table.AppendBulk(data) // Add Bulk Data

@@ -115,6 +115,7 @@ func (mgr *Manager) ProcessCompletedJobs() error {
 func (mgr *Manager) onerun(subj string) error {
 	ctx := context.TODO()
 	cons, err := mgr.streamCompleted.CreateOrUpdateConsumer(ctx, jetstream.ConsumerConfig{
+		Name:          mgr.name,
 		FilterSubject: subj,
 	})
 	if err != nil {
