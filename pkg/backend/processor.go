@@ -36,8 +36,9 @@ import (
 )
 
 const (
-	RunnerRegular = "firecracker"
-	RunnerHigh    = "high"
+	RunnerRegular       = "firecracker"
+	RunnerHigh          = "high"
+	RunnerLabelDetector = "label-detector"
 )
 
 var (
@@ -79,18 +80,15 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, r *http.Request, secretToke
 	// BUG: https://github.com/nats-io/natscli/issues/703
 
 	action := e.GetAction()
+	label, selfHosted := runsOnSelfHosted(e)
+
 	var subj string
-	if action == "completed" && e.GetWorkflowJob().GetRunnerGroupName() == "Default" {
+	if action == "completed" && selfHosted {
 		parts := strings.Split(e.GetWorkflowJob().GetRunnerName(), "-")
-		subj = fmt.Sprintf("%scompleted.%s",
-			StreamPrefix,
-			strings.Join(parts[:len(parts)-1], "-"),
-		)
-	} else if action == "queued" {
-		label, selfHosted := runsOnSelfHosted(e)
-		if selfHosted {
-			subj = fmt.Sprintf("%squeued.%s", StreamPrefix, label)
-		}
+		hostname := strings.Join(parts[:len(parts)-1], "-")
+		subj = fmt.Sprintf("%scompleted.%s", StreamPrefix, hostname)
+	} else if action == "queued" && selfHosted {
+		subj = fmt.Sprintf("%squeued.%s", StreamPrefix, label)
 	}
 
 	if subj != "" {
