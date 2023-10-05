@@ -77,9 +77,14 @@ func NewCmdWaitForJob() *cobra.Command {
 
 			backend.ReportStatus(nc, hostname, backend.StatusPicked, providers.EventKey(event))
 
-			ghRepo := event.GetRepo().GetOwner().GetLogin() + "/" + event.GetRepo().GetName()
-			fmt.Println(ghRepo)
-			return os.WriteFile("repo_owner.txt", []byte(ghRepo), 0o644)
+			// https://gist.github.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7
+			// export runner_scope=$(cat repo_owner.txt)
+			// export labels=
+			label, _ := backend.RunsOnSelfHosted(event)
+			jobVars := fmt.Sprintf(`export runner_scope=%/%s
+export labels=%s
+`, event.GetRepo().GetOwner().GetLogin(), event.GetRepo().GetName(), label)
+			return os.WriteFile("job_vars.txt", []byte(jobVars), 0o644)
 		},
 	}
 

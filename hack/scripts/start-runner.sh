@@ -43,8 +43,9 @@ curl -fsSLO https://github.com/appscodelabs/gh-ci-webhook/releases/latest/downlo
 mv gh-ci-webhook-linux-amd64 gh-ci-webhook
 chmod +x gh-ci-webhook
 ./gh-ci-webhook wait-for-job --nats-addr=$NATS_URL
-cat repo_owner.txt
-runner_scope=$(cat repo_owner.txt)
+cat job_vars.txt
+source job_vars.txt
+# runner_scope=$(cat repo_owner.txt)
 
 flags_found=false
 

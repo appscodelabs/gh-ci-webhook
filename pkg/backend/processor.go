@@ -37,7 +37,7 @@ import (
 
 const (
 	RunnerRegular       = "firecracker"
-	RunnerHigh          = "high"
+	RunnerHigh          = "f0"
 	RunnerLabelDetector = "label-detector"
 )
 
@@ -80,7 +80,7 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, r *http.Request, secretToke
 	// BUG: https://github.com/nats-io/natscli/issues/703
 
 	action := e.GetAction()
-	label, selfHosted := runsOnSelfHosted(e)
+	label, selfHosted := RunsOnSelfHosted(e)
 
 	var subj string
 	if action == "completed" && selfHosted {
@@ -136,7 +136,7 @@ func mustUsedUpFreeMinutes(used interface{}, err error) bool {
 	return used.(bool)
 }
 
-func runsOnSelfHosted(e *github.WorkflowJobEvent) (string, bool) {
+func RunsOnSelfHosted(e *github.WorkflowJobEvent) (string, bool) {
 	if len(e.GetWorkflowJob().Labels) != 1 {
 		return "", false
 	}
