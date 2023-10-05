@@ -81,7 +81,7 @@ func NewCmdWaitForJob() *cobra.Command {
 			// export runner_scope=$(cat repo_owner.txt)
 			// export labels=
 			label, _ := backend.RunsOnSelfHosted(event)
-			jobVars := fmt.Sprintf(`export runner_scope=%/%s
+			jobVars := fmt.Sprintf(`export runner_scope=%s/%s
 export labels=%s
 `, event.GetRepo().GetOwner().GetLogin(), event.GetRepo().GetName(), label)
 			return os.WriteFile("job_vars.txt", []byte(jobVars), 0o644)
