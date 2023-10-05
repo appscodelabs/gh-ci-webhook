@@ -112,11 +112,20 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, r *http.Request, secretToke
 	return nil
 }
 
-func DefaultJobLabel(gh *github.Client, org string, private bool) string {
+func UseRegularRunner(gh *github.Client, org string, private bool) string {
 	initCache(gh)
 
 	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
 		return RunnerRegular
+	}
+	return "ubuntu-20.04"
+}
+
+func UseHighPriorityRunner(gh *github.Client, org string, private bool) string {
+	initCache(gh)
+
+	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
+		return RunnerHigh
 	}
 	return "ubuntu-20.04"
 }

@@ -132,7 +132,13 @@ func runServer(gh *github.Client, nc *nats.Conn, sp *backend.StatusReporter) err
 	r.Get("/runs-on/{org}", func(w http.ResponseWriter, r *http.Request) {
 		org := chi.URLParam(r, "org")
 		private := r.URL.Query().Get("visibility") == "private"
-		label := backend.DefaultJobLabel(gh, org, private)
+		label := backend.UseRegularRunner(gh, org, private)
+		_, _ = w.Write([]byte(label))
+	})
+	r.Get("/runs-on-high/{org}", func(w http.ResponseWriter, r *http.Request) {
+		org := chi.URLParam(r, "org")
+		private := r.URL.Query().Get("visibility") == "private"
+		label := backend.UseHighPriorityRunner(gh, org, private)
 		_, _ = w.Write([]byte(label))
 	})
 
