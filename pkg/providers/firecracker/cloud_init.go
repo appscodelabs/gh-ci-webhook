@@ -224,6 +224,9 @@ newgrp docker
 su $USER
 cd /home/$USER
 
+# bypass docker hub rate limits
+docker login -u tigerworks -p dckr_pat_TQSHB3Z8CoNU8G4jtW7xXOxMefM
+
 export NATS_URL=%s
 export NATS_USERNAME=%s
 export NATS_PASSWORD=%s
