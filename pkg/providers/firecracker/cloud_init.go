@@ -215,6 +215,8 @@ systemctl restart docker
 hostnamectl set-hostname ${RUNNER_NAME}
 echo 127.0.1.1 $HOSTNAME.localdomain ${RUNNER_NAME} >> /etc/hosts
 
+chmod a+w /usr/local/bin
+
 # Prepare GitHun Runner user
 export USER=runner
 # https://docs.docker.com/engine/install/linux-postinstall/
