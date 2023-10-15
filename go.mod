@@ -11,7 +11,7 @@ require (
 	github.com/google/go-github/v55 v55.0.0
 	github.com/klauspost/cpuid/v2 v2.2.3
 	github.com/linode/linodego v1.22.0
-	github.com/nats-io/nats.go v1.30.0
+	github.com/nats-io/nats.go v1.30.3-0.20231012190013-e4ae3183a8b0
 	github.com/olekukonko/tablewriter v0.0.6-0.20230925090304-df64c4bbad77
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
