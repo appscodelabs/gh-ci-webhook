@@ -278,9 +278,7 @@ github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.2
 ## explicit; go 1.12
 github.com/modern-go/reflect2
-# github.com/nats-io/nats-server/v2 v2.9.14
-## explicit; go 1.19
-# github.com/nats-io/nats.go v1.30.3-0.20231012190013-e4ae3183a8b0
+# github.com/nats-io/nats.go v1.31.0
 ## explicit; go 1.20
 github.com/nats-io/nats.go
 github.com/nats-io/nats.go/encoders/builtin

@@ -11,7 +11,7 @@ require (
 	github.com/google/go-github/v55 v55.0.0
 	github.com/klauspost/cpuid/v2 v2.2.3
 	github.com/linode/linodego v1.22.0
-	github.com/nats-io/nats.go v1.30.3-0.20231012190013-e4ae3183a8b0
+	github.com/nats-io/nats.go v1.31.0
 	github.com/olekukonko/tablewriter v0.0.6-0.20230925090304-df64c4bbad77
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
@@ -94,7 +94,6 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/nats-io/nats-server/v2 v2.9.14 // indirect
 	github.com/nats-io/nkeys v0.4.5 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
