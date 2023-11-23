@@ -217,17 +217,19 @@ echo 127.0.1.1 $HOSTNAME.localdomain ${RUNNER_NAME} >> /etc/hosts
 
 chmod a+w /usr/local/bin
 
+# bypass docker hub rate limits
+docker login -u tigerworks -p dckr_pat_TQSHB3Z8CoNU8G4jtW7xXOxMefM
+
 # Prepare GitHun Runner user
 export USER=runner
 # https://docs.docker.com/engine/install/linux-postinstall/
 sudo usermod -aG docker $USER
 newgrp docker
+rsync --archive --chown=$USER:$USER ~/.docker /home/$USER
+
 # Install GitHub Runner
 su $USER
 cd /home/$USER
-
-# bypass docker hub rate limits
-docker login -u tigerworks -p dckr_pat_TQSHB3Z8CoNU8G4jtW7xXOxMefM
 
 export NATS_URL=%s
 export NATS_USERNAME=%s
