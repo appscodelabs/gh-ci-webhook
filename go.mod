@@ -24,7 +24,7 @@ require (
 	golang.org/x/oauth2 v0.7.0
 	golang.org/x/sys v0.12.0
 	gomodules.xyz/go-sh v0.1.0
-	gomodules.xyz/logs v0.0.6
+	gomodules.xyz/logs v0.0.7
 	gomodules.xyz/mailer v0.0.18
 	gomodules.xyz/password-generator v0.2.9
 	gomodules.xyz/pointer v0.1.0
