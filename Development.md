@@ -36,6 +36,8 @@ curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bd
 curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- focal 100G
 
 curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- jammy 100G
+
+curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/9ed8c72a0307278a93ec15695b61103d1a1f8c14/build_rootfs.sh | bash -s -- noble 100G
 ```
 
 ## Download firecracker binary
