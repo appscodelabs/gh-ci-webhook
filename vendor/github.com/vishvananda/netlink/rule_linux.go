@@ -97,6 +97,8 @@ func ruleHandle(rule *Rule, req *nl.NetlinkRequest) error {
 		req.AddData(rtAttrs[i])
 	}
 
+	native := nl.NativeEndian()
+
 	if rule.Priority >= 0 {
 		b := make([]byte, 4)
 		native.PutUint32(b, uint32(rule.Priority))
@@ -152,12 +154,6 @@ func ruleHandle(rule *Rule, req *nl.NetlinkRequest) error {
 		req.AddData(nl.NewRtAttr(nl.FRA_GOTO, b))
 	}
 
-	if rule.IPProto > 0 {
-		b := make([]byte, 4)
-		native.PutUint32(b, uint32(rule.IPProto))
-		req.AddData(nl.NewRtAttr(nl.FRA_IP_PROTO, b))
-	}
-
 	if rule.Dport != nil {
 		b := rule.Dport.toRtAttrData()
 		req.AddData(nl.NewRtAttr(nl.FRA_DPORT_RANGE, b))
@@ -166,11 +162,6 @@ func ruleHandle(rule *Rule, req *nl.NetlinkRequest) error {
 	if rule.Sport != nil {
 		b := rule.Sport.toRtAttrData()
 		req.AddData(nl.NewRtAttr(nl.FRA_SPORT_RANGE, b))
-	}
-
-	if rule.UIDRange != nil {
-		b := rule.UIDRange.toRtAttrData()
-		req.AddData(nl.NewRtAttr(nl.FRA_UID_RANGE, b))
 	}
 
 	_, err := req.Execute(unix.NETLINK_ROUTE, 0)
@@ -208,6 +199,7 @@ func (h *Handle) RuleListFiltered(family int, filter *Rule, filterMask uint64) (
 		return nil, err
 	}
 
+	native := nl.NativeEndian()
 	var res = make([]Rule, 0)
 	for i := range msgs {
 		msg := nl.DeserializeRtMsg(msgs[i])
@@ -240,7 +232,7 @@ func (h *Handle) RuleListFiltered(family int, filter *Rule, filterMask uint64) (
 			case nl.FRA_FWMASK:
 				rule.Mask = int(native.Uint32(attrs[j].Value[0:4]))
 			case nl.FRA_TUN_ID:
-				rule.TunID = uint(native.Uint64(attrs[j].Value[0:8]))
+				rule.TunID = uint(native.Uint64(attrs[j].Value[0:4]))
 			case nl.FRA_IIFNAME:
 				rule.IifName = string(attrs[j].Value[:len(attrs[j].Value)-1])
 			case nl.FRA_OIFNAME:
@@ -261,14 +253,10 @@ func (h *Handle) RuleListFiltered(family int, filter *Rule, filterMask uint64) (
 				rule.Goto = int(native.Uint32(attrs[j].Value[0:4]))
 			case nl.FRA_PRIORITY:
 				rule.Priority = int(native.Uint32(attrs[j].Value[0:4]))
-			case nl.FRA_IP_PROTO:
-				rule.IPProto = int(native.Uint32(attrs[j].Value[0:4]))
 			case nl.FRA_DPORT_RANGE:
 				rule.Dport = NewRulePortRange(native.Uint16(attrs[j].Value[0:2]), native.Uint16(attrs[j].Value[2:4]))
 			case nl.FRA_SPORT_RANGE:
 				rule.Sport = NewRulePortRange(native.Uint16(attrs[j].Value[0:2]), native.Uint16(attrs[j].Value[2:4]))
-			case nl.FRA_UID_RANGE:
-				rule.UIDRange = NewRuleUIDRange(native.Uint32(attrs[j].Value[0:4]), native.Uint32(attrs[j].Value[4:8]))
 			}
 		}
 
@@ -304,12 +292,5 @@ func (pr *RulePortRange) toRtAttrData() []byte {
 	b := [][]byte{make([]byte, 2), make([]byte, 2)}
 	native.PutUint16(b[0], pr.Start)
 	native.PutUint16(b[1], pr.End)
-	return bytes.Join(b, []byte{})
-}
-
-func (pr *RuleUIDRange) toRtAttrData() []byte {
-	b := [][]byte{make([]byte, 4), make([]byte, 4)}
-	native.PutUint32(b[0], pr.Start)
-	native.PutUint32(b[1], pr.End)
 	return bytes.Join(b, []byte{})
 }

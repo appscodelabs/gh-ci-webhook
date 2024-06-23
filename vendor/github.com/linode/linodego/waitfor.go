@@ -6,9 +6,13 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
+
+var englishTitle = cases.Title(language.English)
 
 type EventPoller struct {
 	EntityID   any
@@ -284,7 +288,7 @@ func (client Client) WaitForEventFinished(
 	minStart time.Time,
 	timeoutSeconds int,
 ) (*Event, error) {
-	titledEntityType := strings.Title(string(entityType))
+	titledEntityType := englishTitle.String(string(entityType))
 	filter := Filter{
 		Order:   Descending,
 		OrderBy: "created",
@@ -665,7 +669,7 @@ func (p *EventPoller) WaitForLatestUnknownEvent(ctx context.Context) (*Event, er
 			}
 
 			for _, event := range events {
-				if !eventMatchesSecondary(p.SecondaryEntityID, event) {
+				if p.SecondaryEntityID != nil && !eventMatchesSecondary(p.SecondaryEntityID, event) {
 					continue
 				}
 
@@ -777,10 +781,10 @@ func (client Client) WaitForResourceFree(
 // matches the configured secondary ID.
 // This logic has been broken out to improve readability.
 func eventMatchesSecondary(configuredID any, e Event) bool {
-	// Always return true if the user is not filtering
-	// on a secondary ID.
-	if configuredID == nil {
-		return true
+	// We should return false if the event has no secondary entity.
+	// e.g. A previous disk deletion has completed.
+	if e.SecondaryEntity == nil {
+		return false
 	}
 
 	secondaryID := e.SecondaryEntity.ID

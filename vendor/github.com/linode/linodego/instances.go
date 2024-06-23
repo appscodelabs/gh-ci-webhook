@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"net/url"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -35,6 +34,13 @@ const (
 	InstanceResizing     InstanceStatus = "resizing"
 )
 
+type InstanceMigrationType string
+
+const (
+	WarmMigration InstanceMigrationType = "warm"
+	ColdMigration InstanceMigrationType = "cold"
+)
+
 // Instance represents a linode object
 type Instance struct {
 	ID              int             `json:"id"`
@@ -56,6 +62,9 @@ type Instance struct {
 	Specs           *InstanceSpec   `json:"specs"`
 	WatchdogEnabled bool            `json:"watchdog_enabled"`
 	Tags            []string        `json:"tags"`
+
+	// NOTE: Placement Groups may not currently be available to all users.
+	PlacementGroup *InstancePlacementGroup `json:"placement_group"`
 }
 
 // InstanceSpec represents a linode spec
@@ -98,6 +107,15 @@ type InstanceTransfer struct {
 	Quota int `json:"quota"`
 }
 
+// InstancePlacementGroup represents information about the placement group
+// this Linode is a part of.
+type InstancePlacementGroup struct {
+	ID           int                        `json:"id"`
+	Label        string                     `json:"label"`
+	AffinityType PlacementGroupAffinityType `json:"affinity_type"`
+	IsStrict     bool                       `json:"is_strict"`
+}
+
 // InstanceMetadataOptions specifies various Instance creation fields
 // that relate to the Linode Metadata service.
 type InstanceMetadataOptions struct {
@@ -107,36 +125,51 @@ type InstanceMetadataOptions struct {
 
 // InstanceCreateOptions require only Region and Type
 type InstanceCreateOptions struct {
-	Region          string                    `json:"region"`
-	Type            string                    `json:"type"`
-	Label           string                    `json:"label,omitempty"`
-	Group           string                    `json:"group,omitempty"`
-	RootPass        string                    `json:"root_pass,omitempty"`
-	AuthorizedKeys  []string                  `json:"authorized_keys,omitempty"`
-	AuthorizedUsers []string                  `json:"authorized_users,omitempty"`
-	StackScriptID   int                       `json:"stackscript_id,omitempty"`
-	StackScriptData map[string]string         `json:"stackscript_data,omitempty"`
-	BackupID        int                       `json:"backup_id,omitempty"`
-	Image           string                    `json:"image,omitempty"`
-	Interfaces      []InstanceConfigInterface `json:"interfaces,omitempty"`
-	BackupsEnabled  bool                      `json:"backups_enabled,omitempty"`
-	PrivateIP       bool                      `json:"private_ip,omitempty"`
-	Tags            []string                  `json:"tags,omitempty"`
-	Metadata        *InstanceMetadataOptions  `json:"metadata,omitempty"`
+	Region          string                                 `json:"region"`
+	Type            string                                 `json:"type"`
+	Label           string                                 `json:"label,omitempty"`
+	RootPass        string                                 `json:"root_pass,omitempty"`
+	AuthorizedKeys  []string                               `json:"authorized_keys,omitempty"`
+	AuthorizedUsers []string                               `json:"authorized_users,omitempty"`
+	StackScriptID   int                                    `json:"stackscript_id,omitempty"`
+	StackScriptData map[string]string                      `json:"stackscript_data,omitempty"`
+	BackupID        int                                    `json:"backup_id,omitempty"`
+	Image           string                                 `json:"image,omitempty"`
+	Interfaces      []InstanceConfigInterfaceCreateOptions `json:"interfaces,omitempty"`
+	BackupsEnabled  bool                                   `json:"backups_enabled,omitempty"`
+	PrivateIP       bool                                   `json:"private_ip,omitempty"`
+	Tags            []string                               `json:"tags,omitempty"`
+	Metadata        *InstanceMetadataOptions               `json:"metadata,omitempty"`
+	FirewallID      int                                    `json:"firewall_id,omitempty"`
+
+	// NOTE: Placement Groups may not currently be available to all users.
+	PlacementGroup *InstanceCreatePlacementGroupOptions `json:"placement_group,omitempty"`
 
 	// Creation fields that need to be set explicitly false, "", or 0 use pointers
 	SwapSize *int  `json:"swap_size,omitempty"`
 	Booted   *bool `json:"booted,omitempty"`
+
+	// Deprecated: group is a deprecated property denoting a group label for the Linode.
+	Group string `json:"group,omitempty"`
+}
+
+// InstanceCreatePlacementGroupOptions represents the placement group
+// to create this Linode under.
+type InstanceCreatePlacementGroupOptions struct {
+	ID            int   `json:"id"`
+	CompliantOnly *bool `json:"compliant_only,omitempty"`
 }
 
 // InstanceUpdateOptions is an options struct used when Updating an Instance
 type InstanceUpdateOptions struct {
 	Label           string          `json:"label,omitempty"`
-	Group           string          `json:"group,omitempty"`
 	Backups         *InstanceBackup `json:"backups,omitempty"`
 	Alerts          *InstanceAlert  `json:"alerts,omitempty"`
 	WatchdogEnabled *bool           `json:"watchdog_enabled,omitempty"`
 	Tags            *[]string       `json:"tags,omitempty"`
+
+	// Deprecated: group is a deprecated property denoting a group label for the Linode.
+	Group *string `json:"group,omitempty"`
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface
@@ -165,7 +198,7 @@ func (i *Instance) UnmarshalJSON(b []byte) error {
 func (i *Instance) GetUpdateOptions() InstanceUpdateOptions {
 	return InstanceUpdateOptions{
 		Label:           i.Label,
-		Group:           i.Group,
+		Group:           &i.Group,
 		Backups:         i.Backups,
 		Alerts:          i.Alerts,
 		WatchdogEnabled: &i.WatchdogEnabled,
@@ -179,22 +212,34 @@ type InstanceCloneOptions struct {
 	Type   string `json:"type,omitempty"`
 
 	// LinodeID is an optional existing instance to use as the target of the clone
-	LinodeID       int                      `json:"linode_id,omitempty"`
-	Label          string                   `json:"label,omitempty"`
-	Group          string                   `json:"group,omitempty"`
-	BackupsEnabled bool                     `json:"backups_enabled"`
-	Disks          []int                    `json:"disks,omitempty"`
-	Configs        []int                    `json:"configs,omitempty"`
-	PrivateIP      bool                     `json:"private_ip,omitempty"`
-	Metadata       *InstanceMetadataOptions `json:"metadata,omitempty"`
+	LinodeID       int                                  `json:"linode_id,omitempty"`
+	Label          string                               `json:"label,omitempty"`
+	BackupsEnabled bool                                 `json:"backups_enabled"`
+	Disks          []int                                `json:"disks,omitempty"`
+	Configs        []int                                `json:"configs,omitempty"`
+	PrivateIP      bool                                 `json:"private_ip,omitempty"`
+	Metadata       *InstanceMetadataOptions             `json:"metadata,omitempty"`
+	PlacementGroup *InstanceCreatePlacementGroupOptions `json:"placement_group,omitempty"`
+
+	// Deprecated: group is a deprecated property denoting a group label for the Linode.
+	Group string `json:"group,omitempty"`
 }
 
 // InstanceResizeOptions is an options struct used when resizing an instance
 type InstanceResizeOptions struct {
-	Type string `json:"type"`
+	Type          string                `json:"type"`
+	MigrationType InstanceMigrationType `json:"migration_type,omitempty"`
 
 	// When enabled, an instance resize will also resize a data disk if the instance has no more than one data disk and one swap disk
 	AllowAutoDiskResize *bool `json:"allow_auto_disk_resize,omitempty"`
+}
+
+// InstanceMigrateOptions is an options struct used when migrating an instance
+type InstanceMigrateOptions struct {
+	Type   InstanceMigrationType `json:"type,omitempty"`
+	Region string                `json:"region,omitempty"`
+
+	PlacementGroup *InstanceCreatePlacementGroupOptions `json:"placement_group,omitempty"`
 }
 
 // InstancesPagedResponse represents a linode API response for listing
@@ -416,15 +461,23 @@ func (c *Client) MutateInstance(ctx context.Context, id int) error {
 }
 
 // MigrateInstance - Migrate an instance
-func (c *Client) MigrateInstance(ctx context.Context, id int) error {
-	return c.simpleInstanceAction(ctx, "migrate", id)
+func (c *Client) MigrateInstance(ctx context.Context, linodeID int, opts InstanceMigrateOptions) error {
+	body, err := json.Marshal(opts)
+	if err != nil {
+		return err
+	}
+	e := fmt.Sprintf("linode/instances/%d/migrate", linodeID)
+	_, err = coupleAPIErrors(c.R(ctx).SetBody(string(body)).Post(e))
+	return err
 }
 
 // simpleInstanceAction is a helper for Instance actions that take no parameters
 // and return empty responses `{}` unless they return a standard error
 func (c *Client) simpleInstanceAction(ctx context.Context, action string, linodeID int) error {
-	action = url.PathEscape(action)
-	e := fmt.Sprintf("linode/instances/%d/%s", linodeID, action)
-	_, err := coupleAPIErrors(c.R(ctx).Post(e))
+	_, err := doPOSTRequest[any, any](
+		ctx,
+		c,
+		fmt.Sprintf("linode/instances/%d/%s", linodeID, action),
+	)
 	return err
 }

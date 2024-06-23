@@ -6,7 +6,7 @@ This doc covers the basic usage of the `jetstream` package in `nats.go` client.
   - [Overview](#overview)
   - [Basic usage](#basic-usage)
   - [Streams](#streams)
-    - [Stream management (CRUD)](#stream-management--crud-)
+    - [Stream management (CRUD)](#stream-management-crud)
     - [Listing streams and stream names](#listing-streams-and-stream-names)
     - [Stream-specific operations](#stream-specific-operations)
   - [Consumers](#consumers)
@@ -25,6 +25,15 @@ This doc covers the basic usage of the `jetstream` package in `nats.go` client.
   - [Publishing on stream](#publishing-on-stream)
     - [Synchronous publish](#synchronous-publish)
     - [Async publish](#async-publish)
+  - [KeyValue Store](#keyvalue-store)
+    - [Basic usage of KV bucket](#basic-usage-of-kv-bucket)
+    - [Watching for changes on a bucket](#watching-for-changes-on-a-bucket)
+    - [Additional operations on a bucket](#additional-operations-on-a-bucket)
+  - [Object Store](#object-store)
+    - [Basic usage of Object Store](#basic-usage-of-object-store)
+    - [Watching for changes on a store](#watching-for-changes-on-a-store)
+    - [Additional operations on a store](#additional-operations-on-a-store)
+  - [Examples](#examples)
 
 ## Overview
 
@@ -53,11 +62,12 @@ JetStream API. Key differences between `jetstream` and `nats` packages include:
 - `Msg` - used for message-specific operations - reading data, headers and
   metadata, as well as performing various types of acknowledgements
 
-> __NOTE__: `jetstream` requires nats-server >= 2.9.0 to work correctly.
+Additionally, `jetstream` exposes [KeyValue Store](#keyvalue-store) and
+[ObjectStore](#object-store) capabilities. KV and Object stores are abstraction
+layers on top of JetStream Streams, simplifying key value and large data
+storage on Streams.
 
-> __WARNING__: The new API is currently provided as a _preview_, and will
-> deprecate previous JetStream subscribe APIs. It is encouraged to start
-experimenting with the new APIs as soon as possible.
+> __NOTE__: `jetstream` requires nats-server >= 2.9.0 to work correctly.
 
 ## Basic usage
 
@@ -103,13 +113,19 @@ func main() {
 
     // Get 10 messages from the consumer
     messageCounter := 0
-    msgs, _ := c.Fetch(10)
+    msgs, err := c.Fetch(10)
+    if err != nil {
+        // handle error
+    }
+	
     for msg := range msgs.Messages() {
         msg.Ack()
         fmt.Printf("Received a JetStream message via fetch: %s\n", string(msg.Data()))
         messageCounter++
     }
+	
     fmt.Printf("received %d messages\n", messageCounter)
+	
     if msgs.Error() != nil {
         fmt.Println("Error during Fetch(): ", msgs.Error())
     }
@@ -381,19 +397,29 @@ of messages/bytes. By default, `Fetch()` will wait 30 seconds before timing out
 
 ```go
 // receive up to 10 messages from the stream
-msgs, _ := c.Fetch(10)
+msgs, err := c.Fetch(10)
+if err != nil {
+	// handle error
+}
+
 for msg := range msgs.Messages() {
     fmt.Printf("Received a JetStream message: %s\n", string(msg.Data()))
 }
+
 if msgs.Error() != nil {
     // handle error
 }
 
 // receive up to 1024 B of data
-msgs, _ := c.FetchBytes(1024)
+msgs, err := c.FetchBytes(1024)
+if err != nil {
+// handle error
+}
+
 for msg := range msgs.Messages() {
     fmt.Printf("Received a JetStream message: %s\n", string(msg.Data()))
 }
+
 if msgs.Error() != nil {
     // handle error
 }
@@ -404,10 +430,15 @@ stream available at the time of sending request:
 
 ```go
 // FetchNoWait will not wait for new messages if the whole batch is not available at the time of sending request.
-msgs, _ := c.FetchNoWait(10)
+msgs, err := c.FetchNoWait(10)
+if err != nil {
+// handle error
+}
+
 for msg := range msgs.Messages() {
     fmt.Printf("Received a JetStream message: %s\n", string(msg.Data()))
 }
+
 if msgs.Error() != nil {
     // handle error
 }
@@ -602,6 +633,381 @@ ackF, err = js.PublishAsync("ORDERS.new", []byte("hello"))
 
 Just as for synchronous publish, `PublishAsync()` and `PublishMsgAsync()` accept
 options for setting headers.
+
+## KeyValue Store
+
+JetStream KeyValue Stores offer a straightforward method for storing key-value
+pairs within JetStream. These stores are supported by a specially configured
+stream, designed to efficiently and compactly store these pairs. This structure
+ensures rapid and convenient access to the data.
+
+The KV Store, also known as a bucket, enables the execution of various operations:
+
+- create/update a value for a given key
+- get a value for a given key
+- delete a value for a given key
+- purge all values from a bucket
+- list all keys in a bucket
+- watch for changes on given key set or the whole bucket
+- retrieve history of changes for a given key
+
+### Basic usage of KV bucket
+
+The most basic usage of KV bucket is to create or retrieve a bucket and perform
+basic CRUD operations on keys.
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+
+// Create a new bucket. Bucket name is required and has to be unique within a JetStream account.
+kv, _ := js.CreateKeyValue(ctx, jetstream.KeyValueConfig{Bucket: "profiles"})
+
+// Set a value for a given key
+// Put will either create or update a value for a given key
+kv.Put(ctx, "sue.color", []byte("blue"))
+
+// Get an entry for a given key
+// Entry contains key/value, but also metadata (revision, timestamp, etc.)) 
+entry, _ := kv.Get(ctx, "sue.color")
+
+// Prints `sue.color @ 1 -> "blue"`
+fmt.Printf("%s @ %d -> %q\n", entry.Key(), entry.Revision(), string(entry.Value()))
+
+// Update a value for a given key
+// Update will fail if the key does not exist or the revision has changed
+kv.Update(ctx, "sue.color", []byte("red"), 1)
+
+// Create will fail if the key already exists
+_, err := kv.Create(ctx, "sue.color", []byte("purple"))
+fmt.Println(err) // prints `nats: key exists`
+
+// Delete a value for a given key.
+// Delete is not destructive, it will add a delete marker for a given key
+// and all previous revisions will still be available
+kv.Delete(ctx, "sue.color")
+
+// getting a deleted key will return an error
+_, err = kv.Get(ctx, "sue.color")
+fmt.Println(err) // prints `nats: key not found`
+
+// A bucket can be deleted once it is no longer needed
+js.DeleteKeyValue(ctx, "profiles")
+```
+
+### Watching for changes on a bucket
+
+KV buckets support Watchers, which can be used to watch for changes on a given
+key or the whole bucket. Watcher will receive a notification on a channel when a
+change occurs. By default, watcher will return initial values for all matching
+keys. After sending all initial values, watcher will send nil on the channel to
+signal that all initial values have been sent and it will start sending updates when
+changes occur.
+
+Watcher supports several configuration options:
+
+- `IncludeHistory` will have the key watcher send all historical values
+for each key (up to KeyValueMaxHistory).
+- `IgnoreDeletes` will have the key watcher not pass any keys with
+delete markers.
+- `UpdatesOnly` will have the key watcher only pass updates on values
+(without values already present when starting).
+- `MetaOnly` will have the key watcher retrieve only the entry metadata, not the entry value.
+- `ResumeFromRevision` instructs the key watcher to resume from a
+specific revision number.
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+kv, _ := js.CreateKeyValue(ctx, jetstream.KeyValueConfig{Bucket: "profiles"})
+
+kv.Put(ctx, "sue.color", []byte("blue"))
+
+// A watcher can be created to watch for changes on a given key or the whole bucket
+// By default, watcher will return most recent values for all matching keys.
+// Watcher can be configured to only return updates by using jetstream.UpdatesOnly() option.
+watcher, _ := kv.Watch(ctx, "sue.*")
+defer watcher.Stop()
+
+kv.Put(ctx, "sue.age", []byte("43"))
+kv.Put(ctx, "sue.color", []byte("red"))
+
+// First, the watcher sends most recent values for all matching keys.
+// In this case, it will send a single entry for `sue.color`.
+entry := <-watcher.Updates()
+// Prints `sue.color @ 1 -> "blue"`
+fmt.Printf("%s @ %d -> %q\n", entry.Key(), entry.Revision(), string(entry.Value()))
+
+// After all current values have been sent, watcher will send nil on the channel.
+entry = <-watcher.Updates()
+if entry != nil {
+    fmt.Println("Unexpected entry received")
+}
+
+// After that, watcher will send updates when changes occur
+// In this case, it will send an entry for `sue.color` and `sue.age`.
+
+entry = <-watcher.Updates()
+// Prints `sue.age @ 2 -> "43"`
+fmt.Printf("%s @ %d -> %q\n", entry.Key(), entry.Revision(), string(entry.Value()))
+
+entry = <-watcher.Updates()
+// Prints `sue.color @ 3 -> "red"`
+fmt.Printf("%s @ %d -> %q\n", entry.Key(), entry.Revision(), string(entry.Value()))
+```
+
+### Additional operations on a bucket
+
+In addition to basic CRUD operations and watching for changes, KV buckets
+support several additional operations:
+
+- `ListKeys` will return all keys in a bucket"
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+kv, _ := js.CreateKeyValue(ctx, jetstream.KeyValueConfig{Bucket: "profiles"})
+
+kv.Put(ctx, "sue.color", []byte("blue"))
+kv.Put(ctx, "sue.age", []byte("43"))
+kv.Put(ctx, "bucket", []byte("profiles"))
+
+keys, _ := kv.ListKeys(ctx)
+
+// Prints all 3 keys
+for key := range keys.Keys() {
+    fmt.Println(key)
+}
+```
+
+- `Purge` and `PurgeDeletes` for removing all keys from a bucket
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+kv, _ := js.CreateKeyValue(ctx, jetstream.KeyValueConfig{Bucket: "profiles"})
+
+kv.Put(ctx, "sue.color", []byte("blue"))
+kv.Put(ctx, "sue.age", []byte("43"))
+kv.Put(ctx, "bucket", []byte("profiles"))
+
+// Purge will remove all keys from a bucket.
+// The latest revision of each key will be kept
+// with a delete marker, all previous revisions will be removed
+// permanently.
+kv.Purge(ctx)
+
+// PurgeDeletes will remove all keys from a bucket
+// with a delete marker.
+kv.PurgeDeletes(ctx)
+```
+
+- `Status` will return the current status of a bucket
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+kv, _ := js.CreateKeyValue(ctx, jetstream.KeyValueConfig{Bucket: "profiles"})
+
+kv.Put(ctx, "sue.color", []byte("blue"))
+kv.Put(ctx, "sue.age", []byte("43"))
+kv.Put(ctx, "bucket", []byte("profiles"))
+
+status, _ := kv.Status(ctx)
+
+fmt.Println(status.Bucket()) // prints `profiles`
+fmt.Println(status.Values()) // prints `3`
+fmt.Println(status.Bytes()) // prints the size of all values in bytes
+```
+
+## Object Store
+
+JetStream Object Stores offer a straightforward method for storing large objects
+within JetStream. These stores are backed by a specially configured streams,
+designed to efficiently and compactly store these objects.
+
+The Object Store, also known as a bucket, enables the execution of various
+operations:
+
+- create/update an object
+- get an object
+- delete an object
+- list all objects in a bucket
+- watch for changes on objects in a bucket
+- create links to other objects or other buckets
+
+### Basic usage of Object Store
+
+The most basic usage of Object bucket is to create or retrieve a bucket and
+perform basic CRUD operations on objects.
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+
+// Create a new bucket. Bucket name is required and has to be unique within a JetStream account.
+os, _ := js.CreateObjectStore(ctx, jetstream.ObjectStoreConfig{Bucket: "configs"})
+
+config1 := bytes.NewBufferString("first config")
+// Put an object in a bucket. Put expects an object metadata and a reader
+// to read the object data from.
+os.Put(ctx, jetstream.ObjectMeta{Name: "config-1"}, config1)
+
+// Objects can also be created using various helper methods
+
+// 1. As raw strings
+os.PutString(ctx, "config-2", "second config")
+
+// 2. As raw bytes
+os.PutBytes(ctx, "config-3", []byte("third config"))
+
+// 3. As a file
+os.PutFile(ctx, "config-4.txt")
+
+// Get an object
+// Get returns a reader and object info
+// Similar to Put, Get can also be used with helper methods
+// to retrieve object data as a string, bytes or to save it to a file
+object, _ := os.Get(ctx, "config-1")
+data, _ := io.ReadAll(object)
+info, _ := object.Info()
+
+// Prints `configs.config-1 -> "first config"`
+fmt.Printf("%s.%s -> %q\n", info.Bucket, info.Name, string(data))
+
+// Delete an object.
+// Delete will remove object data from stream, but object metadata will be kept
+// with a delete marker.
+os.Delete(ctx, "config-1")
+
+// getting a deleted object will return an error
+_, err := os.Get(ctx, "config-1")
+fmt.Println(err) // prints `nats: object not found`
+
+// A bucket can be deleted once it is no longer needed
+js.DeleteObjectStore(ctx, "configs")
+```
+
+### Watching for changes on a store
+
+Object Stores support Watchers, which can be used to watch for changes on
+objects in a given bucket. Watcher will receive a notification on a channel when
+a change occurs. By default, watcher will return latest information for all
+objects in a bucket. After sending all initial values, watcher will send nil on
+the channel to signal that all initial values have been sent and it will start
+sending updates when changes occur.
+
+>__NOTE:__ Watchers do not retrieve values for objects, only metadata (containing
+>information such as object name, bucket name, object size etc.). If object data
+>is required, `Get` method should be used.
+
+Watcher supports several configuration options:
+
+- `IncludeHistory` will have the watcher send historical updates for each
+  object.
+- `IgnoreDeletes` will have the watcher not pass any objects with delete
+  markers.
+- `UpdatesOnly` will have the watcher only pass updates on objects (without
+  objects already present when starting).
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+os, _ := js.CreateObjectStore(ctx, jetstream.ObjectStoreConfig{Bucket: "configs"})
+
+os.PutString(ctx, "config-1", "first config")
+
+// By default, watcher will return most recent values for all objects in a bucket.
+// Watcher can be configured to only return updates by using jetstream.UpdatesOnly() option.
+watcher, _ := os.Watch(ctx)
+defer watcher.Stop()
+
+// create a second object
+os.PutString(ctx, "config-2", "second config")
+
+// update metadata of the first object
+os.UpdateMeta(ctx, "config-1", jetstream.ObjectMeta{Name: "config-1", Description: "updated config"})
+
+// First, the watcher sends most recent values for all matching objects.
+// In this case, it will send a single entry for `config-1`.
+object := <-watcher.Updates()
+// Prints `configs.config-1 -> ""`
+fmt.Printf("%s.%s -> %q\n", object.Bucket, object.Name, object.Description)
+
+// After all current values have been sent, watcher will send nil on the channel.
+object = <-watcher.Updates()
+if object != nil {
+    fmt.Println("Unexpected object received")
+}
+
+// After that, watcher will send updates when changes occur
+// In this case, it will send an entry for `config-2` and `config-1`.
+object = <-watcher.Updates()
+// Prints `configs.config-2 -> ""`
+fmt.Printf("%s.%s -> %q\n", object.Bucket, object.Name, object.Description)
+
+object = <-watcher.Updates()
+// Prints `configs.config-1 -> "updated config"`
+fmt.Printf("%s.%s -> %q\n", object.Bucket, object.Name, object.Description)
+```
+
+### Additional operations on a store
+
+In addition to basic CRUD operations and watching for changes, Object Stores
+support several additional operations:
+
+- `UpdateMeta` for updating object metadata, such as name, description, etc.
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+os, _ := js.CreateObjectStore(ctx, jetstream.ObjectStoreConfig{Bucket: "configs"})
+
+os.PutString(ctx, "config", "data")
+
+// update metadata of the object to e.g. add a description
+os.UpdateMeta(ctx, "config", jetstream.ObjectMeta{Name: "config", Description: "this is a config"})
+
+// object can be moved under a new name (unless it already exists)
+os.UpdateMeta(ctx, "config", jetstream.ObjectMeta{Name: "config-1", Description: "updated config"})
+```
+
+- `List` for listing information about all objects in a bucket:
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+os, _ := js.CreateObjectStore(ctx, jetstream.ObjectStoreConfig{Bucket: "configs"})
+
+os.PutString(ctx, "config-1", "cfg1")
+os.PutString(ctx, "config-2", "cfg1")
+os.PutString(ctx, "config-3", "cfg1")
+
+// List will return information about all objects in a bucket
+objects, _ := os.List(ctx)
+
+// Prints all 3 objects
+for _, object := range objects {
+    fmt.Println(object.Name)
+}
+```
+
+- `Status` will return the current status of a bucket
+
+```go
+js, _ := jetstream.New(nc)
+ctx := context.Background()
+os, _ := js.CreateObjectStore(ctx, jetstream.ObjectStoreConfig{Bucket: "configs"})
+
+os.PutString(ctx, "config-1", "cfg1")
+os.PutString(ctx, "config-2", "cfg1")
+os.PutString(ctx, "config-3", "cfg1")
+
+status, _ := os.Status(ctx)
+
+fmt.Println(status.Bucket()) // prints `configs`
+fmt.Println(status.Size()) // prints the size of the bucket in bytes
+```
 
 ## Examples
 
