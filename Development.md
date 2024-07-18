@@ -44,7 +44,8 @@ curl -L https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bd
 
 ```
 release_url="https://github.com/firecracker-microvm/firecracker/releases"
-latest=$(basename $(curl -fsSLI -o /dev/null -w  %{url_effective} ${release_url}/latest))
+# latest=$(basename $(curl -fsSLI -o /dev/null -w  %{url_effective} ${release_url}/latest))
+latest=v1.7.0
 arch=`uname -m`
 curl -L ${release_url}/download/${latest}/firecracker-${latest}-${arch}.tgz \
 | tar -xz
