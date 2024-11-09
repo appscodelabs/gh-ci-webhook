@@ -33,7 +33,7 @@ github.com/ProtonMail/go-crypto/openpgp/s2k
 # github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 ## explicit; go 1.13
 github.com/asaskevich/govalidator
-# github.com/cloudflare/circl v1.3.3
+# github.com/cloudflare/circl v1.3.7
 ## explicit; go 1.19
 github.com/cloudflare/circl/dh/x25519
 github.com/cloudflare/circl/dh/x448
@@ -80,7 +80,7 @@ github.com/docker/cli/cli/config/types
 # github.com/docker/distribution v2.8.2+incompatible
 ## explicit
 github.com/docker/distribution/registry/client/auth/challenge
-# github.com/docker/docker v24.0.0+incompatible
+# github.com/docker/docker v25.0.6+incompatible
 ## explicit
 github.com/docker/docker/pkg/homedir
 # github.com/docker/docker-credential-helpers v0.7.0
@@ -549,7 +549,7 @@ google.golang.org/api/transport/http/internal/propagation
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.64.0
+# google.golang.org/grpc v1.64.1
 ## explicit; go 1.19
 google.golang.org/grpc
 google.golang.org/grpc/attributes

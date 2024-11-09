@@ -32,7 +32,7 @@ require (
 	gomodules.xyz/pointer v0.1.0
 	gomodules.xyz/signals v0.2.0
 	gomodules.xyz/x v0.0.17
-	google.golang.org/grpc v1.64.0
+	google.golang.org/grpc v1.64.1
 	k8s.io/apimachinery v0.30.2
 	k8s.io/klog/v2 v2.130.1
 	sigs.k8s.io/yaml v1.4.0
@@ -45,14 +45,14 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0 // indirect
 	github.com/containerd/fifo v1.0.0 // indirect
 	github.com/containernetworking/cni v1.0.1 // indirect
 	github.com/containernetworking/plugins v1.1.1 // indirect
 	github.com/docker/cli v24.0.0+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.0+incompatible // indirect
+	github.com/docker/docker v25.0.6+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.1-rc1 // indirect
