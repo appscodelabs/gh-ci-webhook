@@ -226,6 +226,13 @@ chmod a+w /usr/local/bin
 # bypass docker hub rate limits
 docker login -u tigerworks -p %s
 
+for IMAGE_NAME in tonistiigi/binfmt:latest moby/buildkit:buildx-stable-1; do
+	until docker pull "$IMAGE_NAME"; do
+	  echo "Docker pull failed, retrying..."
+	  sleep 5 # Wait for 5 seconds before retrying
+	done
+done
+
 # Prepare GitHun Runner user
 export USER=runner
 # https://docs.docker.com/engine/install/linux-postinstall/
