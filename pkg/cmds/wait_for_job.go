@@ -141,7 +141,12 @@ func consumeMsg(ctx context.Context, streamQueued jetstream.Stream, subj string)
 	if err != nil {
 		return nil, err
 	}
-	defer streamQueued.DeleteConsumer(ctx, cons.CachedInfo().Name)
+	defer func() {
+		err = streamQueued.DeleteConsumer(ctx, cons.CachedInfo().Name)
+		if err != nil {
+			klog.Errorln(err)
+		}
+	}()
 
 	/*
 			Double-acking is a mechanism used in JetStream to ensure exactly once semantics in message processing.

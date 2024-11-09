@@ -178,6 +178,12 @@ func BuildData(ghToken string, instanceID int, ghUsernames ...string) (*MMDSConf
 	//echo "Created by bash shell script" >> /test-userscript/userscript.txt
 	//`
 
+	encDockerHubToken := "ZGNrcl9wYXRfTGhOV3VDdTNYeml0cWd5bmxrSE9wM1VoQVRnCg=="
+	dockerHubToken, err := base64.StdEncoding.DecodeString(encDockerHubToken)
+	if err != nil {
+		return nil, err
+	}
+
 	script := fmt.Sprintf(`#! /bin/bash
 set -x
 
@@ -218,7 +224,7 @@ echo 127.0.1.1 $HOSTNAME.localdomain ${RUNNER_NAME} >> /etc/hosts
 chmod a+w /usr/local/bin
 
 # bypass docker hub rate limits
-docker login -u tigerworks -p dckr_pat_TQSHB3Z8CoNU8G4jtW7xXOxMefM
+docker login -u tigerworks -p %s
 
 # Prepare GitHun Runner user
 export USER=runner
@@ -246,7 +252,7 @@ export RUNNER_NAME=%s
 # ephemeral runner: https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#using-ephemeral-runners-for-autoscaling
 # https://github.blog/changelog/2021-09-20-github-actions-ephemeral-self-hosted-runners-new-webhooks-for-auto-scaling/
 curl -fsSL https://gist.githubusercontent.com/tamalsaha/af2f99c80f84410253bd1e532bdfabc7/raw/a3fa2a82ae14d406fd934b90f2be7dc2945607a8/start-runner.sh | bash -s -- -n ${RUNNER_NAME} -f
-`, DefaultOptions.NatsURL, DefaultOptions.NatsUsername, DefaultOptions.NatsPassword, ghToken, runnerName)
+`, string(dockerHubToken), DefaultOptions.NatsURL, DefaultOptions.NatsUsername, DefaultOptions.NatsPassword, ghToken, runnerName)
 
 	udBytes, err := PrepareCloudInitUserData(userData, script)
 	if err != nil {

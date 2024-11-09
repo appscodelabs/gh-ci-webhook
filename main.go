@@ -17,8 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"os"
-
 	"github.com/appscodelabs/gh-ci-webhook/pkg/cmds"
 	_ "github.com/appscodelabs/gh-ci-webhook/pkg/providers/registry"
 
@@ -26,11 +24,14 @@ import (
 )
 
 func main() {
+	if err := realMain(); err != nil {
+		panic(err)
+	}
+}
+
+func realMain() error {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := cmds.NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
-	}
-	os.Exit(0)
+	return cmds.NewRootCmd().Execute()
 }

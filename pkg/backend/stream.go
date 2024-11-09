@@ -121,7 +121,12 @@ func (mgr *Manager) onerun(subj string) error {
 	if err != nil {
 		return err
 	}
-	defer mgr.streamCompleted.DeleteConsumer(ctx, cons.CachedInfo().Name)
+	defer func() {
+		err = mgr.streamCompleted.DeleteConsumer(ctx, cons.CachedInfo().Name)
+		if err != nil {
+			klog.Errorln(err)
+		}
+	}()
 
 	// FetchNoWait will not wait for new messages if the whole batch is not available at the time of sending request.
 	msgs, err := cons.FetchNoWait(mgr.numWorkers)
@@ -134,7 +139,10 @@ func (mgr *Manager) onerun(subj string) error {
 			if err != nil {
 				klog.Errorln(err)
 			}
-			msg.DoubleAck(context.TODO())
+			err = msg.DoubleAck(context.TODO())
+			if err != nil {
+				klog.Errorln(err)
+			}
 
 			if slot, found := mgr.Provider.Next(); found {
 				err := mgr.Provider.StartRunner(slot) // Not 1-1 mapping for the VM shut down to restarted
@@ -188,7 +196,10 @@ func (mgr *Manager) ProcessCompletedJobs() error {
 				if err != nil {
 					klog.Errorln(err)
 				}
-				msg.DoubleAck(context.TODO())
+				err = msg.DoubleAck(context.TODO())
+				if err != nil {
+					klog.Errorln(err)
+				}
 
 				if slot, found := mgr.Provider.Next(); found {
 					err := mgr.Provider.StartRunner(slot) // Not 1-1 mapping for the VM shut down to restarted
