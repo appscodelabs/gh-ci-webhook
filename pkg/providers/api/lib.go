@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/google/go-github/v55/github"
+	"github.com/google/go-github/v68/github"
 	"github.com/nats-io/nats.go"
 )
 

@@ -101,6 +101,19 @@ type (
 		// outstanding asynchronously published messages are acknowledged by the
 		// server.
 		PublishAsyncComplete() <-chan struct{}
+
+		// CleanupPublisher will cleanup the publishing side of JetStreamContext.
+		//
+		// This will unsubscribe from the internal reply subject if needed.
+		// All pending async publishes will fail with ErrJetStreamContextClosed.
+		//
+		// If an error handler was provided, it will be called for each pending async
+		// publish and PublishAsyncComplete will be closed.
+		//
+		// After completing JetStreamContext is still usable - internal subscription
+		// will be recreated on next publish, but the acks from previous publishes will
+		// be lost.
+		CleanupPublisher()
 	}
 
 	// StreamManager provides CRUD API for managing streams. It is available as
@@ -109,7 +122,8 @@ type (
 	// to operate on a stream.
 	StreamManager interface {
 		// CreateStream creates a new stream with given config and returns an
-		// interface to operate on it. If stream with given name already exists,
+		// interface to operate on it. If stream with given name already exists
+		// and its configuration differs from the provided one,
 		// ErrStreamNameAlreadyInUse is returned.
 		CreateStream(ctx context.Context, cfg StreamConfig) (Stream, error)
 
@@ -422,7 +436,7 @@ func NewWithAPIPrefix(nc *nats.Conn, apiPrefix string, opts ...JetStreamOpt) (Je
 		}
 	}
 	if apiPrefix == "" {
-		return nil, fmt.Errorf("API prefix cannot be empty")
+		return nil, errors.New("API prefix cannot be empty")
 	}
 	if !strings.HasSuffix(apiPrefix, ".") {
 		jsOpts.apiPrefix = fmt.Sprintf("%s.", apiPrefix)
@@ -1030,6 +1044,39 @@ func wrapContextWithoutDeadline(ctx context.Context) (context.Context, context.C
 		return ctx, nil
 	}
 	return context.WithTimeout(ctx, defaultAPITimeout)
+}
+
+// CleanupPublisher will cleanup the publishing side of JetStreamContext.
+//
+// This will unsubscribe from the internal reply subject if needed.
+// All pending async publishes will fail with ErrJetStreamContextClosed.
+//
+// If an error handler was provided, it will be called for each pending async
+// publish and PublishAsyncComplete will be closed.
+//
+// After completing JetStreamContext is still usable - internal subscription
+// will be recreated on next publish, but the acks from previous publishes will
+// be lost.
+func (js *jetStream) CleanupPublisher() {
+	js.cleanupReplySub()
+	js.publisher.Lock()
+	errCb := js.publisher.aecb
+	for id, paf := range js.publisher.acks {
+		paf.err = ErrJetStreamPublisherClosed
+		if paf.errCh != nil {
+			paf.errCh <- paf.err
+		}
+		if errCb != nil {
+			// call error handler after releasing the mutex to avoid contention
+			defer errCb(js, paf.msg, ErrJetStreamPublisherClosed)
+		}
+		delete(js.publisher.acks, id)
+	}
+	if js.publisher.doneCh != nil {
+		close(js.publisher.doneCh)
+		js.publisher.doneCh = nil
+	}
+	js.publisher.Unlock()
 }
 
 func (js *jetStream) cleanupReplySub() {

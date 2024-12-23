@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/go-github/v55/github"
+	"github.com/google/go-github/v68/github"
 )
 
 const (
@@ -40,8 +40,10 @@ func EventKey(e *github.WorkflowJobEvent) string {
 }
 
 func ListRunners(ctx context.Context, client *github.Client, repo *github.Repository) ([]*github.Runner, error) {
-	opt := &github.ListOptions{
-		PerPage: 100,
+	opt := &github.ListRunnersOptions{
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+		},
 	}
 
 	var result []*github.Runner

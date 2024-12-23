@@ -15,6 +15,7 @@ package jetstream
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -192,8 +193,8 @@ type (
 		// v2.10.0 or later.
 		Metadata map[string]string `json:"metadata,omitempty"`
 
-		// Template identifies the template that manages the Stream. DEPRECATED:
-		// This feature is no longer supported.
+		// Template identifies the template that manages the Stream.
+		// Deprecated: This feature is no longer supported.
 		Template string `json:"template_owner,omitempty"`
 	}
 
@@ -584,7 +585,7 @@ func (alg StoreCompression) MarshalJSON() ([]byte, error) {
 	case NoCompression:
 		str = "none"
 	default:
-		return nil, fmt.Errorf("unknown compression algorithm")
+		return nil, errors.New("unknown compression algorithm")
 	}
 	return json.Marshal(str)
 }
@@ -600,7 +601,7 @@ func (alg *StoreCompression) UnmarshalJSON(b []byte) error {
 	case "none":
 		*alg = NoCompression
 	default:
-		return fmt.Errorf("unknown compression algorithm")
+		return errors.New("unknown compression algorithm")
 	}
 	return nil
 }

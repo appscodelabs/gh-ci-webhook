@@ -28,7 +28,7 @@ import (
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 
 	"github.com/gomodules/agecache"
-	"github.com/google/go-github/v55/github"
+	"github.com/google/go-github/v68/github"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/pkg/errors"
