@@ -118,7 +118,7 @@ func UseRegularRunner(gh *github.Client, org string, private bool) string {
 	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
 		return RunnerRegular
 	}
-	return "ubuntu-20.04"
+	return "ubuntu-24.04"
 }
 
 func UseHighPriorityRunner(gh *github.Client, org string, private bool) string {
@@ -127,7 +127,7 @@ func UseHighPriorityRunner(gh *github.Client, org string, private bool) string {
 	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
 		return RunnerHigh
 	}
-	return "ubuntu-20.04"
+	return "ubuntu-24.04"
 }
 
 func usedUpFreeMinutes(gh *github.Client, org string) (bool, error) {
