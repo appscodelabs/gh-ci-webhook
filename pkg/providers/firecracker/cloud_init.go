@@ -211,7 +211,8 @@ add-apt-repository \
    $(lsb_release -cs) \
    stable"
 apt update
-apt install docker-ce docker-ce-cli containerd.io -y
+# https://github.com/docker/setup-qemu-action/issues/67
+apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin qemu-user-static -y
 echo \
   "{
     \"metrics-addr\" : \"0.0.0.0:9323\",
