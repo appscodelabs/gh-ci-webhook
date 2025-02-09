@@ -38,6 +38,7 @@ import (
 const (
 	RunnerRegular       = "firecracker"
 	RunnerHigh          = "f0"
+	RunnerTestrig       = "testrig"
 	RunnerLabelDetector = "label-detector"
 )
 
@@ -150,7 +151,7 @@ func RunsOnSelfHosted(e *github.WorkflowJobEvent) (string, bool) {
 		return "", false
 	}
 	label := e.GetWorkflowJob().Labels[0]
-	return label, label == RunnerHigh || label == RunnerRegular
+	return label, label == RunnerHigh || label == RunnerRegular || label == RunnerTestrig
 }
 
 func (mgr *Manager) ProcessCompletedMsg(payload []byte) (*github.WorkflowJobEvent, error) {

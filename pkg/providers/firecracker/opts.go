@@ -45,6 +45,8 @@ type Options struct {
 	NatsURL      string
 	NatsUsername string
 	NatsPassword string
+
+	Testrig bool
 }
 
 var DefaultOptions = NewOptions()
@@ -76,6 +78,8 @@ func (opts *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.IntVar(&opts.NumInstances, "firecracker.num-instances", opts.NumInstances, "Number of parallel instances")
 	fs.Int64Var(&opts.VcpuCount, "firecracker.vcpu-count", opts.VcpuCount, "Vcpu count for a single instance")
 	fs.Int64Var(&opts.MemSizeMib, "firecracker.mem-size-mib", opts.MemSizeMib, "Size(MiB) of memory for a single instance")
+
+	fs.BoolVar(&opts.Testrig, "testrig", opts.Testrig, "Prefer testrig")
 }
 
 /*

@@ -37,8 +37,9 @@ import (
 
 func NewCmdWaitForJob() *cobra.Command {
 	var (
-		ncOpts = backend.NewNATSOptions()
-		nc     *nats.Conn
+		ncOpts  = backend.NewNATSOptions()
+		nc      *nats.Conn
+		testrig bool
 	)
 	cmd := &cobra.Command{
 		Use:               "wait-for-job",
@@ -58,7 +59,7 @@ func NewCmdWaitForJob() *cobra.Command {
 
 			var event *github.WorkflowJobEvent
 			for {
-				event, err = wait_until_job(nc)
+				event, err = wait_until_job(nc, testrig)
 				if err != nil {
 					klog.ErrorS(err, "error while waiting for next job")
 				}
@@ -89,12 +90,13 @@ export labels=%s
 	}
 
 	ncOpts.AddFlags(cmd.Flags())
+	cmd.Flags().BoolVar(&testrig, "testrig", testrig, "Prefer testrig")
 
 	return cmd
 }
 
 // https://natsbyexample.com/examples/jetstream/workqueue-stream/go
-func wait_until_job(nc *nats.Conn) (*github.WorkflowJobEvent, error) {
+func wait_until_job(nc *nats.Conn, testrig bool) (*github.WorkflowJobEvent, error) {
 	js, err := jetstream.New(nc)
 	if err != nil {
 		return nil, err
@@ -111,9 +113,20 @@ func wait_until_job(nc *nats.Conn) (*github.WorkflowJobEvent, error) {
 
 	defer printStreamState(ctx, streamQueued)
 
-	payload, err := consumeMsg(ctx, streamQueued, streamName+"."+backend.RunnerHigh)
-	if err != nil || len(payload) == 0 {
-		payload, err = consumeMsg(ctx, streamQueued, streamName+"."+backend.RunnerRegular)
+	subjects := []string{
+		streamName + "." + backend.RunnerHigh,
+		streamName + "." + backend.RunnerRegular,
+	}
+	if testrig {
+		subjects = append([]string{streamName + "." + backend.RunnerTestrig}, subjects...)
+	}
+
+	var payload []byte
+	for _, subj := range subjects {
+		payload, err = consumeMsg(ctx, streamQueued, subj)
+		if err == nil && len(payload) > 0 {
+			break
+		}
 	}
 	if err != nil {
 		return nil, err
