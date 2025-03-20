@@ -1,8 +1,8 @@
 module github.com/appscodelabs/gh-ci-webhook
 
-go 1.22.0
+go 1.23.0
 
-toolchain go1.22.4
+toolchain go1.24.1
 
 require (
 	github.com/coreos/go-iptables v0.7.0
@@ -10,7 +10,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.14
 	github.com/gomodules/agecache v0.0.0-20180510002131-52691b5239ad
 	github.com/google/go-containerregistry v0.19.2
-	github.com/google/go-github/v68 v68.0.0
+	github.com/google/go-github/v70 v70.0.0
 	github.com/klauspost/cpuid/v2 v2.2.8
 	github.com/linode/linodego v1.36.0
 	github.com/nats-io/nats.go v1.38.0
@@ -22,9 +22,9 @@ require (
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
 	github.com/yuin/goldmark v1.7.2
 	gocloud.dev v0.37.0
-	golang.org/x/crypto v0.31.0
-	golang.org/x/oauth2 v0.21.0
-	golang.org/x/sys v0.28.0
+	golang.org/x/crypto v0.35.0
+	golang.org/x/oauth2 v0.27.0
+	golang.org/x/sys v0.30.0
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.7
 	gomodules.xyz/mailer v0.0.19
@@ -108,8 +108,8 @@ require (
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gomodules.xyz/clock v0.0.0-20200817085942-06523dba733f // indirect
 	gomodules.xyz/email v0.1.0 // indirect

@@ -30,7 +30,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/google/go-github/v68/github"
+	"github.com/google/go-github/v70/github"
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/acme/autocert"
