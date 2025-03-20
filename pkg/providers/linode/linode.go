@@ -25,7 +25,7 @@ import (
 	"github.com/appscodelabs/gh-ci-webhook/pkg/backend"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
-	"github.com/google/go-github/v68/github"
+	"github.com/google/go-github/v70/github"
 	"github.com/linode/linodego"
 	"github.com/nats-io/nats.go"
 	"golang.org/x/oauth2"

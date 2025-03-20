@@ -29,7 +29,7 @@ import (
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers"
 	"github.com/appscodelabs/gh-ci-webhook/pkg/providers/api"
 
-	"github.com/google/go-github/v68/github"
+	"github.com/google/go-github/v70/github"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
