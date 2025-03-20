@@ -103,7 +103,7 @@ curl -s https://raw.githubusercontent.com/actions/runner/main/scripts/create-lat
 ## Update Webhook Host
 
 ```
-curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.20/gh-ci-webhook-linux-amd64.tar.gz
+curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.21/gh-ci-webhook-linux-amd64.tar.gz
 tar -xzvf gh-ci-webhook-linux-amd64.tar.gz
 chmod +x gh-ci-webhook-linux-amd64
 mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
@@ -114,7 +114,7 @@ systemctl stop gh-ci-webhook
 ## Update Worker hosts
 
 ```
-curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.20/gh-ci-webhook-linux-amd64.tar.gz
+curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.21/gh-ci-webhook-linux-amd64.tar.gz
 tar -xzvf gh-ci-webhook-linux-amd64.tar.gz
 chmod +x gh-ci-webhook-linux-amd64
 mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
