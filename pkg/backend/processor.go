@@ -116,7 +116,10 @@ func SubmitPayload(gh *github.Client, nc *nats.Conn, r *http.Request, secretToke
 func UseRegularRunner(gh *github.Client, org string, private bool) string {
 	initCache(gh)
 
-	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
+	//if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
+	//	return RunnerRegular
+	//}
+	if private {
 		return RunnerRegular
 	}
 	return "ubuntu-24.04"
@@ -125,7 +128,10 @@ func UseRegularRunner(gh *github.Client, org string, private bool) string {
 func UseHighPriorityRunner(gh *github.Client, org string, private bool) string {
 	initCache(gh)
 
-	if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
+	//if private && mustUsedUpFreeMinutes(actionsBillingCache.Get(org)) {
+	//	return RunnerHigh
+	//}
+	if private {
 		return RunnerHigh
 	}
 	return "ubuntu-24.04"
