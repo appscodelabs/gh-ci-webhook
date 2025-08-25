@@ -19,9 +19,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/google/go-github/v70/github"
 	"golang.org/x/oauth2"
-	"os"
 )
 
 func main() {
