@@ -5,9 +5,10 @@
 - Download pre-built binary into a server
 
 ```bash
-curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.21/gh-ci-webhook-linux-amd64
+curl -fsSL -O https://github.com/appscodelabs/gh-ci-webhook/releases/download/v0.0.21/gh-ci-webhook-linux-amd64.tar.gz
+tar -xzvf gh-ci-webhook-linux-amd64.tar.gz
 chmod +x gh-ci-webhook-linux-amd64
-mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
+sudo mv gh-ci-webhook-linux-amd64 /usr/local/bin/gh-ci-webhook
 ```
 
 - Install systemd service
@@ -18,7 +19,7 @@ chmod +x gh-ci-webhook.service
 
 # edit gh-ci-webhook.service file to add `--ssl --secret-key=<uuid>`
 
-mv gh-ci-webhook.service /lib/systemd/system/gh-ci-webhook.service
+sudo mv gh-ci-webhook.service /lib/systemd/system/gh-ci-webhook.service
 ```
 
 Now, you should be able to enable the service, start it, then monitor the logs by tailing the systemd journal:
