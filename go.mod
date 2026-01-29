@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/coreos/go-iptables v0.7.0
 	github.com/firecracker-microvm/firecracker-go-sdk v0.0.0-00010101000000-000000000000
-	github.com/go-chi/chi/v5 v5.0.14
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/gomodules/agecache v0.0.0-20180510002131-52691b5239ad
 	github.com/google/go-containerregistry v0.19.2
 	github.com/google/go-github/v70 v70.0.0
