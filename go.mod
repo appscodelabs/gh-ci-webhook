@@ -1,6 +1,6 @@
 module github.com/appscodelabs/gh-ci-webhook
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.24.1
 
@@ -22,9 +22,9 @@ require (
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5
 	github.com/yuin/goldmark v1.7.2
 	gocloud.dev v0.37.0
-	golang.org/x/crypto v0.35.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/oauth2 v0.27.0
-	golang.org/x/sys v0.30.0
+	golang.org/x/sys v0.38.0
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.7
 	gomodules.xyz/mailer v0.0.19
@@ -108,8 +108,8 @@ require (
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
-	golang.org/x/net v0.36.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gomodules.xyz/clock v0.0.0-20200817085942-06523dba733f // indirect
 	gomodules.xyz/email v0.1.0 // indirect
