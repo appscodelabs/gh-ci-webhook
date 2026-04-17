@@ -38,6 +38,7 @@ import (
 const (
 	RunnerRegular       = "firecracker"
 	RunnerHigh          = "f0"
+	RunnerPaid          = "blacksmith-4vcpu-ubuntu-2404"
 	RunnerTestrig       = "testrig"
 	RunnerLabelDetector = "label-detector"
 )
@@ -120,7 +121,7 @@ func UseRegularRunner(gh *github.Client, org string, private bool) string {
 	//	return RunnerRegular
 	//}
 	if private {
-		return RunnerRegular
+		return RunnerPaid // RunnerRegular
 	}
 	return "ubuntu-24.04"
 }
@@ -132,7 +133,7 @@ func UseHighPriorityRunner(gh *github.Client, org string, private bool) string {
 	//	return RunnerHigh
 	//}
 	if private {
-		return RunnerHigh
+		return RunnerPaid // RunnerHigh
 	}
 	return "ubuntu-24.04"
 }
