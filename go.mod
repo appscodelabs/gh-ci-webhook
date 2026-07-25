@@ -21,7 +21,7 @@ require (
 	github.com/yuin/goldmark v1.7.2
 	gocloud.dev v0.37.0
 	golang.org/x/crypto v0.50.0
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sys v0.43.0
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.7
@@ -30,7 +30,7 @@ require (
 	gomodules.xyz/pointer v0.1.0
 	gomodules.xyz/signals v0.2.0
 	gomodules.xyz/x v0.0.17
-	google.golang.org/grpc v1.79.3
+	google.golang.org/grpc v1.82.1
 	k8s.io/apimachinery v0.30.2
 	k8s.io/klog/v2 v2.130.1
 	sigs.k8s.io/yaml v1.4.0
