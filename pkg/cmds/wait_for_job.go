@@ -64,7 +64,8 @@ func NewCmdWaitForJob() *cobra.Command {
 					klog.ErrorS(err, "error while waiting for next job")
 				}
 				if event != nil {
-					klog.InfoS("tentatively picked job",
+					klog.InfoS(
+						"tentatively picked job",
 						"repo_owner", event.Org.GetLogin(),
 						"repo_name", event.Repo.GetName(),
 						"workflow_job_id", event.GetWorkflowJob().GetID(),
